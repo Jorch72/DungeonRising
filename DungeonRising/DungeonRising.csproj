@@ -77,7 +77,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BearLibTerminal.cs" />
+    <Compile Include="Dungeon.cs" />
     <Compile Include="Entry.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="Herringbone.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
