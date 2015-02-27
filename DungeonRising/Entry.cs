@@ -78,7 +78,7 @@ namespace DungeonRising
         {
             Self = new Entry();
             Terminal.Open();
-            Terminal.Set("window: title='Dungeon Rising', size=120x50;");
+            Terminal.Set("window: title='Dungeon Rising', size=110x45; font: Zodiac-Narrow-6x12.png, size=6x12;");
             Self.AnimationThread = new Thread(() => {
                 while (true)
                 {
