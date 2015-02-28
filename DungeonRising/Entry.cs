@@ -78,14 +78,14 @@ namespace DungeonRising
         {
             Self = new Entry();
             Terminal.Open();
-            Terminal.Set("window: title='Dungeon Rising', size=110x45; font: Zodiac-Narrow-6x12.png, size=6x12;");
+            Terminal.Set("log: level=trace");
+            Terminal.Set("window: title='Dungeon Rising', size=110x45; font: ./Zodiac-Narrow-6x12.png, size=6x12, codepage=./custom.txt;");
             Self.AnimationThread = new Thread(() => {
                 while (true)
                 {
                     Self.currentColor = (Self.currentColor + 1) % 12;
                     Self.Render();
                     Thread.Sleep(50);
-
                 }
             });
             Self.AnimationThread.IsBackground = true;
