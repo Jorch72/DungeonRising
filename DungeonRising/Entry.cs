@@ -54,21 +54,23 @@ namespace DungeonRising
                 Color.FromArgb(0xff, 0x00, 0xff),
                 Color.FromArgb(0xff, 0x00, 0x77),
             };
-        public Dungeon dungeon;
-        public char[,] world;
-        public Entity player;
+        public Dungeon DungeonStart;
+        public char[,] World;
+        public int[,] LogicMap;
+        public Entity Player;
         public static int input = 0; 
             
         public Entry()
         {
-            dungeon = new Dungeon(40, 100);
-            world = dungeon.DLevel;
-            Tuple<int, int> playerStart = world.RandomMatch('.');
+            DungeonStart = new Dungeon(40, 100);
+            World = DungeonStart.DLevel;
+            LogicMap = DungeonStart.Level;
+            Tuple<int, int> playerStart = World.RandomMatch('.');
             while (playerStart.Item1 < 0)
             {
-                playerStart = world.RandomMatch('.');
+                playerStart = World.RandomMatch('.');
             }
-            player = new Entity('@', playerStart.Item2, playerStart.Item1);
+            Player = new Entity('@', playerStart.Item2, playerStart.Item1);
         
 
         }
@@ -95,19 +97,19 @@ namespace DungeonRising
         public void Render()
         {
 
-            for (int y = 0; y < world.GetLength(0); y++)
+            for (int y = 0; y < World.GetLength(0); y++)
             {
-                for (int x = 0; x < world.GetLength(1); x++)
+                for (int x = 0; x < World.GetLength(1); x++)
                 {
-                    if (x == player.X && y == player.Y)
+                    if (x == Player.X && y == Player.Y)
                     {
                         Terminal.Color(playerColors[currentColor]);
-                        Terminal.Put(x + 1, y + 1, player.Rep);
+                        Terminal.Put(x + 1, y + 1, Player.Rep);
                         Terminal.Color(System.Drawing.Color.White);
                     }
                     else
                     {
-                        Terminal.Put(x + 1, y + 1, world[y, x]);
+                        Terminal.Put(x + 1, y + 1, World[y, x]);
                     }
                 }
             }
@@ -125,32 +127,32 @@ namespace DungeonRising
                     case Terminal.TK_KP_4:
                     case Terminal.TK_H:
                         {
-                            if (world[player.Y,player.X - 1] != '#')
-                                player.X--;
+                            if (LogicMap[Player.Y,Player.X - 1] != -1)
+                                Player.X--;
                         }
                         break;
                     case Terminal.TK_RIGHT:
                     case Terminal.TK_KP_6:
                     case Terminal.TK_L:
                         {
-                            if (world[player.Y, player.X + 1] != '#')
-                                player.X++;
+                            if (LogicMap[Player.Y, Player.X + 1] != -1)
+                                Player.X++;
                         }
                         break;
                     case Terminal.TK_UP:
                     case Terminal.TK_KP_8:
                     case Terminal.TK_K:
                         {
-                            if (world[player.Y - 1, player.X] != '#')
-                                player.Y--;
+                            if (LogicMap[Player.Y - 1, Player.X] != -1)
+                                Player.Y--;
                         }
                         break;
                     case Terminal.TK_DOWN:
                     case Terminal.TK_KP_2:
                     case Terminal.TK_J:
                         {
-                            if (world[player.Y + 1, player.X] != '#')
-                                player.Y++;
+                            if (LogicMap[Player.Y + 1, Player.X] != -1)
+                                Player.Y++;
                         }
                         break;
                 }

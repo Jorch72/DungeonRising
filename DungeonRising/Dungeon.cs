@@ -10,12 +10,38 @@ namespace DungeonRising
     {
         public int Height { get; protected set; }
         public int Width  { get; protected set; }
-        public char[,] DLevel {get; set;}
+        public static Dictionary<char, int> Mapping = new Dictionary<char, int>(256);
+        public char[,] DLevel { get; set; }
+        public int[,] Level { get; set; }
+        static Dungeon()
+        {
+            for(int c = 0; c < 128; c++)
+            {
+                Mapping.Add((char)c, c);
+            }
+            /*
+0123456789ABCDEF
+─━│┃┄┅┆┇┈┉┊┋┌┍┎┏ 2500
+┐┑┒┓└┕┖┗┘┙┚┛├┝┞┟ 2510
+┠┡┢┣┤┥┦┧┨┩┪┫┬┭┮┯ 2520
+┰┱┲┳┴┵┶┷┸┹┺┻┼┽┾┿ 2530
+╀╁╂╃╄╅╆╇╈╉╊╋╌╍╎╏ 2540
+═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟ 2550
+╠╡╢╣╤╥╦╧╨╩╪╫╬╭╮╯ 2560
+╰╱╲╳╴╵╶╷╸╹╺╻╼╽╾╿ 2570
+             */
+            for (int c = 0; c < 128; c++)
+            {
+                Mapping.Add((char)(c + 0x2500), c + 128);
+            }
+            
+        }
         public Dungeon()
         {
             Height = 60;
             Width = 60;
             DLevel = new char[Height, Width];
+            Level = new int[Height, Width];
             DLevel.Fill('#');
             PlaceBones();
         }
@@ -24,6 +50,7 @@ namespace DungeonRising
             Height = height;
             Width = width;
             DLevel = new char[Height, Width];
+            Level = new int[Height, Width];
             DLevel.Fill('#');
             PlaceBones();
         }
@@ -46,13 +73,314 @@ namespace DungeonRising
             for(int x = 0; x < Width; x++)
             {
                 DLevel[0, x] = '#';
+                DLevel[1, x] = '#';
                 DLevel[Height - 1, x] = '#';
+                DLevel[Height - 2, x] = '#';
             }
             for(int y = 0; y < Height; y++)
             {
                 DLevel[y, 0] = '#';
+                DLevel[y, 1] = '#';
                 DLevel[y, Width - 1] = '#';
+                DLevel[y, Width - 2] = '#';
             }
+
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    if (DLevel[y, x] == '#')
+                    {
+                        int q = 0;
+                        q |= (y <= 0 || DLevel[y - 1, x] == '#') ? 1 : 0;
+                        q |= (y <= 0 || x >= Width - 1 || DLevel[y - 1, x + 1] == '#') ? 2 : 0;
+                        q |= (x >= Width - 1 || DLevel[y, x + 1] == '#') ? 4 : 0;
+                        q |= (y >= Height - 1 || x >= Width - 1 || DLevel[y + 1, x + 1] == '#') ? 8 : 0;
+                        q |= (y >= Height - 1 || DLevel[y + 1, x] == '#') ? 16 : 0;
+                        q |= (y >= Height - 1 || x <= 0 || DLevel[y + 1, x - 1] == '#') ? 32 : 0;
+                        q |= (x <= 0 || DLevel[y, x - 1] == '#') ? 64 : 0;
+                        q |= (y <= 0 || x <= 0 || DLevel[y - 1, x - 1] == '#') ? 128 : 0;
+
+                        if (q == 0xff)
+                        {
+                            Level[y, x] = 32; //(int)' '
+                        }
+                        else
+                        {
+                            Level[y, x] = -1;
+                        }
+                    }
+                    else
+                    {
+                        Level[y, x] = (int)DLevel[y, x];
+                    }
+                }
+            }
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    if (Level[y, x] == -1)
+                    {
+                        bool n = (y <= 0 || Level[y - 1, x] == -1);
+                        bool ne = (y <= 0 || x >= Width - 1 || Level[y - 1, x + 1] == -1 || Level[y - 1, x + 1] == 32);
+                        bool e = (x >= Width - 1 || Level[y, x + 1] == -1);
+                        bool se = (y >= Height - 1 || x >= Width - 1 || Level[y + 1, x + 1] == -1 || Level[y + 1, x + 1] == 32);
+                        bool s = (y >= Height - 1 || Level[y + 1, x] == -1);
+                        bool sw = (y >= Height - 1 || x <= 0 || Level[y + 1, x - 1] == -1 || Level[y + 1, x - 1] == 32);
+                        bool w = (x <= 0 || Level[y, x - 1] == -1);
+                        bool nw = (y <= 0 || x <= 0 || Level[y - 1, x - 1] == -1 || Level[y - 1, x - 1] == 32);
+
+                        if (n)
+                        {
+                            if (e)
+                            {
+                                if (s)
+                                {
+                                    if (w)
+                                    {
+                                        /*
+                                        if (sw && nw && ne)
+                                            DLevel[y, x] = '┌';
+                                        else if (se && sw && nw)
+                                            DLevel[y, x] = '└';
+                                        else if (nw && ne && se)
+                                            DLevel[y, x] = '┐';
+                                        else if (se && sw && ne)
+                                            DLevel[y, x] = '┘'; 
+                                        else if (nw && ne)
+                                            DLevel[y, x] = '┬';
+                                        else if (ne && se)
+                                            DLevel[y, x] = '┤';
+                                        else if (se && sw)
+                                            DLevel[y, x] = '┴';
+                                        else if (sw && nw)
+                                            DLevel[y, x] = '├';
+                                        else*/
+                                        DLevel[y, x] = '┼';
+                                    }
+                                    else
+                                    {
+                                        /*
+                                        if (ne && se)
+                                            DLevel[y, x] = '│'; 
+                                        else if (nw && ne && !se)
+                                            DLevel[y, x] = '┌';
+                                        else if (se && sw && !ne)
+                                            DLevel[y, x] = '└';
+                                        else*/
+                                        DLevel[y, x] = '├';
+                                    }
+                                }
+                                else if (w)
+                                {
+                                    /*
+                                    if (nw && ne)
+                                        DLevel[y, x] = '─';
+                                    else if (ne && se && !nw)
+                                        DLevel[y, x] = '┘';
+                                    else if (sw && nw && !ne)
+                                        DLevel[y, x] = '└';
+                                    else*/
+                                    DLevel[y, x] = '┴';
+
+                                }
+                                else
+                                {
+                                    DLevel[y, x] = '└';
+                                }
+                            }
+                            else if (s)
+                            {
+                                if (w)
+                                {
+                                    /*
+                                    if (sw && nw)
+                                        DLevel[y, x] = '│'; 
+                                    else if (nw && ne && !sw)
+                                        DLevel[y, x] = '┐';
+                                    else if (se && sw && !nw)
+                                        DLevel[y, x] = '┘';
+                                    else*/
+                                    DLevel[y, x] = '┤';
+                                }
+                                else
+                                {
+                                    DLevel[y, x] = '│';
+                                }
+                            }
+                            else if (w)
+                            {
+                                DLevel[y, x] = '┘';
+                            }
+                            else
+                            {
+                                DLevel[y, x] = '│';
+                            }
+                        }
+                        else if (e)  // ┼ ├ ┤ ┴ ┬ ┌ ┐ └ ┘ │ ─
+                        {
+                            if (s)
+                            {
+                                if (w)
+                                {
+                                    /*
+                                    if (se && sw)
+                                        DLevel[y, x] = '─'; 
+                                    else if (ne && se && !sw)
+                                        DLevel[y, x] = '┐';
+                                    else if (sw && nw && !se)
+                                        DLevel[y, x] = '┌';
+                                    else*/
+                                    DLevel[y, x] = '┬';
+                                }
+                                else
+                                {
+                                    DLevel[y, x] = '┌';
+                                }
+                            }
+                            else if (w)
+                            {
+                                DLevel[y, x] = '─';
+                            }
+                            else
+                            {
+                                DLevel[y, x] = '─';
+                            }
+                        }
+                        else if (s)
+                        {
+                            if (w)
+                            {
+                                DLevel[y, x] = '┐';
+                            }
+                            else
+                            {
+                                DLevel[y, x] = '│';
+                            }
+                        }
+                        else if (w)
+                        {
+                            DLevel[y, x] = '─';
+                        }
+                        else
+                        {
+                            DLevel[y, x] = '#';
+                        }
+
+                    }
+                    else
+                    {
+                        if (Level[y, x] == 32)
+                        {
+                            DLevel[y, x] = ' ';
+                        }
+                    }
+                }
+            }
+            //vertical crossbar removal
+            for (int y = 1; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    // ┼ ├ ┤ ┴ ┬ ┌ ┐ └ ┘ │ ─
+                    if (DLevel[y, x] == '┼' || DLevel[y, x] == '├' || DLevel[y, x] == '┤' || DLevel[y, x] == '┴')
+                    {
+                        if (DLevel[y - 1, x] == '┼' || DLevel[y - 1, x] == '├' || DLevel[y - 1, x] == '┤' || DLevel[y - 1, x] == '┬')
+                        {
+                            if ((y <= 0 || x >= Width - 1 || Level[y - 1, x + 1] == -1 || Level[y - 1, x + 1] == 32) &&
+                             (y <= 0 || x <= 0 || Level[y - 1, x - 1] == -1 || Level[y - 1, x - 1] == 32) &&
+                             (y <= 0 || x >= Width - 1 || Level[y, x + 1] == -1 || Level[y, x + 1] == 32) &&
+                             (y <= 0 || x <= 0 || Level[y, x - 1] == -1 || Level[y, x - 1] == 32))
+                            {
+                                switch (DLevel[y, x])
+                                {
+                                    case '┼':
+                                        DLevel[y, x] = '┬';
+                                        break;
+                                    case '├':
+                                        DLevel[y, x] = '┌';
+                                        break;
+                                    case '┤':
+                                        DLevel[y, x] = '┐';
+                                        break;
+                                    case '┴':
+                                        DLevel[y, x] = '─';
+                                        break;
+                                }
+                                switch (DLevel[y - 1, x])
+                                {
+                                    case '┼':
+                                        DLevel[y-1, x] = '┴';
+                                        break;
+                                    case '├':
+                                        DLevel[y-1, x] = '└';
+                                        break;
+                                    case '┤':
+                                        DLevel[y-1, x] = '┘';
+                                        break;
+                                    case '┬':
+                                        DLevel[y-1, x] = '─';
+                                        break;
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            //horizontal crossbar removal
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 1; x < Width; x++)
+                {
+                    // ┼ ├ ┤ ┴ ┬ ┌ ┐ └ ┘ │ ─
+                    if (DLevel[y, x] == '┼' || DLevel[y, x] == '┤' || DLevel[y, x] == '┬' || DLevel[y, x] == '┴')
+                    {
+                        if (DLevel[y, x-1] == '┼' || DLevel[y, x-1] == '├' || DLevel[y, x-1] == '┬' || DLevel[y, x-1] == '┴')
+                        {
+                            if ((y >= Height - 1 || x >= Width - 1 || Level[y + 1, x -1] == -1 || Level[y + 1, x - 1] == 32) &&
+                             (y <= 0 || x <= 0 || Level[y - 1, x - 1] == -1 || Level[y - 1, x - 1] == 32) &&
+                             (y >= Height - 1 || Level[y + 1, x] == -1 || Level[y + 1, x] == 32) &&
+                             (y <= 0 || Level[y - 1, x] == -1 || Level[y - 1, x] == 32))
+                            {
+                                switch (DLevel[y, x])
+                                {
+                                    case '┼':
+                                        DLevel[y, x] = '├';
+                                        break;
+                                    case '┤':
+                                        DLevel[y, x] = '│';
+                                        break;
+                                    case '┬':
+                                        DLevel[y, x] = '┌';
+                                        break;
+                                    case '┴':
+                                        DLevel[y, x] = '└';
+                                        break;
+                                }
+                                switch (DLevel[y, x - 1])
+                                {
+                                    case '┼':
+                                        DLevel[y, x - 1] = '┤';
+                                        break;
+                                    case '├':
+                                        DLevel[y, x - 1] = '│';
+                                        break;
+                                    case '┬':
+                                        DLevel[y, x - 1] = '┐';
+                                        break;
+                                    case '┴':
+                                        DLevel[y, x - 1] = '┘';
+                                        break;
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
         }
 
     }
