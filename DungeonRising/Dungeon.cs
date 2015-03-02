@@ -8,6 +8,7 @@ namespace DungeonRising
 {
     public class Dungeon
     {
+        public const int FLOOR = 5000, WALL = 9999, DARK = 11111;
         public int Height { get; protected set; }
         public int Width  { get; protected set; }
         public static Dictionary<char, int> Mapping = new Dictionary<char, int>(256);
@@ -103,16 +104,16 @@ namespace DungeonRising
 
                         if (q == 0xff)
                         {
-                            Level[y, x] = 32; //(int)' '
+                            Level[y, x] = DARK; //(int)' '
                         }
                         else
                         {
-                            Level[y, x] = -1;
+                            Level[y, x] = WALL;
                         }
                     }
                     else
                     {
-                        Level[y, x] = (int)DLevel[y, x];
+                        Level[y, x] = FLOOR;
                     }
                 }
             }
@@ -120,16 +121,16 @@ namespace DungeonRising
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    if (Level[y, x] == -1)
+                    if (Level[y, x] == WALL)
                     {
-                        bool n = (y <= 0 || Level[y - 1, x] == -1);
-                        bool ne = (y <= 0 || x >= Width - 1 || Level[y - 1, x + 1] == -1 || Level[y - 1, x + 1] == 32);
-                        bool e = (x >= Width - 1 || Level[y, x + 1] == -1);
-                        bool se = (y >= Height - 1 || x >= Width - 1 || Level[y + 1, x + 1] == -1 || Level[y + 1, x + 1] == 32);
-                        bool s = (y >= Height - 1 || Level[y + 1, x] == -1);
-                        bool sw = (y >= Height - 1 || x <= 0 || Level[y + 1, x - 1] == -1 || Level[y + 1, x - 1] == 32);
-                        bool w = (x <= 0 || Level[y, x - 1] == -1);
-                        bool nw = (y <= 0 || x <= 0 || Level[y - 1, x - 1] == -1 || Level[y - 1, x - 1] == 32);
+                        bool n = (y <= 0 || Level[y - 1, x] == WALL);
+                        bool ne = (y <= 0 || x >= Width - 1 || Level[y - 1, x + 1] == WALL || Level[y - 1, x + 1] == DARK);
+                        bool e = (x >= Width - 1 || Level[y, x + 1] == WALL);
+                        bool se = (y >= Height - 1 || x >= Width - 1 || Level[y + 1, x + 1] == WALL || Level[y + 1, x + 1] == DARK);
+                        bool s = (y >= Height - 1 || Level[y + 1, x] == WALL);
+                        bool sw = (y >= Height - 1 || x <= 0 || Level[y + 1, x - 1] == WALL || Level[y + 1, x - 1] == DARK);
+                        bool w = (x <= 0 || Level[y, x - 1] == WALL);
+                        bool nw = (y <= 0 || x <= 0 || Level[y - 1, x - 1] == WALL || Level[y - 1, x - 1] == DARK);
 
                         if (n)
                         {
@@ -265,13 +266,13 @@ namespace DungeonRising
                         }
                         else
                         {
-                            DLevel[y, x] = '#';
+                            DLevel[y, x] = '─';
                         }
 
                     }
                     else
                     {
-                        if (Level[y, x] == 32)
+                        if (Level[y, x] == DARK)
                         {
                             DLevel[y, x] = ' ';
                         }
@@ -288,10 +289,10 @@ namespace DungeonRising
                     {
                         if (DLevel[y - 1, x] == '┼' || DLevel[y - 1, x] == '├' || DLevel[y - 1, x] == '┤' || DLevel[y - 1, x] == '┬')
                         {
-                            if ((y <= 0 || x >= Width - 1 || Level[y - 1, x + 1] == -1 || Level[y - 1, x + 1] == 32) &&
-                             (y <= 0 || x <= 0 || Level[y - 1, x - 1] == -1 || Level[y - 1, x - 1] == 32) &&
-                             (y <= 0 || x >= Width - 1 || Level[y, x + 1] == -1 || Level[y, x + 1] == 32) &&
-                             (y <= 0 || x <= 0 || Level[y, x - 1] == -1 || Level[y, x - 1] == 32))
+                            if ((y <= 0 || x >= Width - 1 || Level[y - 1, x + 1] == WALL || Level[y - 1, x + 1] == DARK) &&
+                             (y <= 0 || x <= 0 || Level[y - 1, x - 1] == WALL || Level[y - 1, x - 1] == DARK) &&
+                             (y <= 0 || x >= Width - 1 || Level[y, x + 1] == WALL || Level[y, x + 1] == DARK) &&
+                             (y <= 0 || x <= 0 || Level[y, x - 1] == WALL || Level[y, x - 1] == DARK))
                             {
                                 switch (DLevel[y, x])
                                 {
@@ -339,10 +340,10 @@ namespace DungeonRising
                     {
                         if (DLevel[y, x-1] == '┼' || DLevel[y, x-1] == '├' || DLevel[y, x-1] == '┬' || DLevel[y, x-1] == '┴')
                         {
-                            if ((y >= Height - 1 || x >= Width - 1 || Level[y + 1, x -1] == -1 || Level[y + 1, x - 1] == 32) &&
-                             (y <= 0 || x <= 0 || Level[y - 1, x - 1] == -1 || Level[y - 1, x - 1] == 32) &&
-                             (y >= Height - 1 || Level[y + 1, x] == -1 || Level[y + 1, x] == 32) &&
-                             (y <= 0 || Level[y - 1, x] == -1 || Level[y - 1, x] == 32))
+                            if ((y >= Height - 1 || x >= Width - 1 || Level[y + 1, x -1] == WALL || Level[y + 1, x - 1] == DARK) &&
+                             (y <= 0 || x <= 0 || Level[y - 1, x - 1] == WALL || Level[y - 1, x - 1] == DARK) &&
+                             (y >= Height - 1 || Level[y + 1, x] == WALL || Level[y + 1, x] == DARK) &&
+                             (y <= 0 || Level[y - 1, x] == WALL || Level[y - 1, x] == DARK))
                             {
                                 switch (DLevel[y, x])
                                 {

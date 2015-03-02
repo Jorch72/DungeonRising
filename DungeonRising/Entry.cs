@@ -58,21 +58,28 @@ namespace DungeonRising
         public char[,] World;
         public int[,] LogicMap;
         public Entity Player;
+        public List<int> Path;
+        public Dijkstra Dijk;
         public static int input = 0; 
-            
+        
+
         public Entry()
         {
             DungeonStart = new Dungeon(40, 100);
             World = DungeonStart.DLevel;
             LogicMap = DungeonStart.Level;
-            Tuple<int, int> playerStart = World.RandomMatch('.');
+            Tuple<int, int> playerStart = World.RandomMatch('.'), goal = World.RandomMatch('.');
+
             while (playerStart.Item1 < 0)
             {
                 playerStart = World.RandomMatch('.');
             }
             Player = new Entity('@', playerStart.Item2, playerStart.Item1);
-        
 
+            Dijk = new Dijkstra(LogicMap);
+            Dijk.SetGoal(goal.Item1, goal.Item2);
+            Dijk.Scan();
+            Path = Dijk.GetPath(Player.X, Player.Y);
         }
 
         private static Entry Self;
@@ -105,6 +112,12 @@ namespace DungeonRising
                     {
                         Terminal.Color(playerColors[currentColor]);
                         Terminal.Put(x + 1, y + 1, Player.Rep);
+                        Terminal.Color(System.Drawing.Color.White);
+                    }
+                    else if(Path.Contains(y * Dijk.Width + x))
+                    {
+                        Terminal.Color(playerColors[currentColor]);
+                        Terminal.Put(x + 1, y + 1, World[y, x]);
                         Terminal.Color(System.Drawing.Color.White);
                     }
                     else

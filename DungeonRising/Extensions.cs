@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using C5;
 
 namespace DungeonRising
 {
@@ -24,7 +24,7 @@ namespace DungeonRising
             }
             return default(T);
         }
-        public static int FindByIndex<T>(this IList<T> list, T target)
+        public static int FindByIndex<T>(this List<T> list, T target)
         {
             if (list.Count() == 0)
                 return -1;
@@ -101,7 +101,7 @@ namespace DungeonRising
             int frustration = 0;
 
             int coord1 = r.Next(mat.GetLength(0)), coord2 = r.Next(mat.GetLength(1));
-            while (frustration < 20 && !(EqualityComparer<T>.Default.Equals(mat[coord1, coord2], test)))
+            while (frustration < 20 && !(System.Collections.Generic.EqualityComparer<T>.Default.Equals(mat[coord1, coord2], test)))
             {
                 coord1 = r.Next(mat.GetLength(0));
                 coord2 = r.Next(mat.GetLength(1));
@@ -112,6 +112,17 @@ namespace DungeonRising
 
             return Tuple.Create(coord1,coord2);
         }
+
+
+        public static T GetIndex<T>(this T[,] mat, int index, int width)
+        {
+            return mat[index / width, index % width];
+        }
+        public static void SetIndex<T>(this T[,] mat, int index, int width, T value)
+        {
+            mat[index / width, index % width] = value;
+        }
+
         public static T[,] Fill<T>(this T[,] mat, T item)
         {
             if (mat.Length == 0)
@@ -231,6 +242,12 @@ namespace DungeonRising
                 dupe[i] = mat[i];
             }
             return dupe;
+        }
+        public static C5.HashDictionary<K, V> Replicate<K, V>(this C5.HashDictionary<K, V> dict)
+        {
+            C5.HashDictionary<K, V> d = new C5.HashDictionary<K, V>();
+            d.AddAll(dict);
+            return d;
         }
 
     }
