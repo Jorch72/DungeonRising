@@ -13,7 +13,7 @@ namespace DungeonRising
         private int[][] DirShuffled;
         private const int GOAL = 0;
         private HashDictionary <int, int> goals, open, closed, fresh;
-        XSRandom r;
+        private static XSRandom r;
         public Dijkstra(int[,] level)
         {
             r = new XSRandom();
@@ -112,7 +112,7 @@ namespace DungeonRising
             }
             return DMap;
         }
-        public List<int> GetPath(int startX, int startY)
+        public List<int> GetPath(int startY, int startX)
         {
             List<int> ls = new List<int>();
             if(DMap[startY, startX] > Dungeon.FLOOR)

@@ -13,6 +13,7 @@ namespace DungeonRising
         public int Width  { get; protected set; }
         public static Dictionary<char, int> Mapping = new Dictionary<char, int>(256);
         public char[,] DLevel { get; set; }
+        public char[,] PairLevel { get; set; }
         public int[,] Level { get; set; }
         static Dungeon()
         {
@@ -51,6 +52,7 @@ namespace DungeonRising
             Height = height;
             Width = width;
             DLevel = new char[Height, Width];
+            PairLevel = new char[Height, Width * 2];
             Level = new int[Height, Width];
             DLevel.Fill('#');
             PlaceBones();
@@ -140,51 +142,16 @@ namespace DungeonRising
                                 {
                                     if (w)
                                     {
-                                        /*
-                                        if (sw && nw && ne)
-                                            DLevel[y, x] = '┌';
-                                        else if (se && sw && nw)
-                                            DLevel[y, x] = '└';
-                                        else if (nw && ne && se)
-                                            DLevel[y, x] = '┐';
-                                        else if (se && sw && ne)
-                                            DLevel[y, x] = '┘'; 
-                                        else if (nw && ne)
-                                            DLevel[y, x] = '┬';
-                                        else if (ne && se)
-                                            DLevel[y, x] = '┤';
-                                        else if (se && sw)
-                                            DLevel[y, x] = '┴';
-                                        else if (sw && nw)
-                                            DLevel[y, x] = '├';
-                                        else*/
                                         DLevel[y, x] = '┼';
                                     }
                                     else
                                     {
-                                        /*
-                                        if (ne && se)
-                                            DLevel[y, x] = '│'; 
-                                        else if (nw && ne && !se)
-                                            DLevel[y, x] = '┌';
-                                        else if (se && sw && !ne)
-                                            DLevel[y, x] = '└';
-                                        else*/
                                         DLevel[y, x] = '├';
                                     }
                                 }
                                 else if (w)
                                 {
-                                    /*
-                                    if (nw && ne)
-                                        DLevel[y, x] = '─';
-                                    else if (ne && se && !nw)
-                                        DLevel[y, x] = '┘';
-                                    else if (sw && nw && !ne)
-                                        DLevel[y, x] = '└';
-                                    else*/
                                     DLevel[y, x] = '┴';
-
                                 }
                                 else
                                 {
@@ -195,14 +162,6 @@ namespace DungeonRising
                             {
                                 if (w)
                                 {
-                                    /*
-                                    if (sw && nw)
-                                        DLevel[y, x] = '│'; 
-                                    else if (nw && ne && !sw)
-                                        DLevel[y, x] = '┐';
-                                    else if (se && sw && !nw)
-                                        DLevel[y, x] = '┘';
-                                    else*/
                                     DLevel[y, x] = '┤';
                                 }
                                 else
@@ -225,14 +184,6 @@ namespace DungeonRising
                             {
                                 if (w)
                                 {
-                                    /*
-                                    if (se && sw)
-                                        DLevel[y, x] = '─'; 
-                                    else if (ne && se && !sw)
-                                        DLevel[y, x] = '┐';
-                                    else if (sw && nw && !se)
-                                        DLevel[y, x] = '┌';
-                                    else*/
                                     DLevel[y, x] = '┬';
                                 }
                                 else
@@ -382,6 +333,39 @@ namespace DungeonRising
                 }
             }
             
+            for(int y = 0; y < Height; y++)
+            {
+                for(int x = 0, px = 0; x < Width; x++, px += 2)
+                {
+                    PairLevel[y, px] = DLevel[y, x];
+                    switch(PairLevel[y, px])
+                    {
+//                        case '┼ ├ ┤ ┴ ┬ ┌ ┐ └ ┘ │ ─'
+                        case '┼':
+                        case '├':
+                        case '┴':
+                        case '┬':
+                        case '┌':
+                        case '└':
+                        case '─':
+                            PairLevel[y, px + 1] = '─';
+                            break;
+
+                        default:
+                            PairLevel[y, px + 1] = ' ';
+                            break;
+                        /*
+                    case '.':
+                    case '┤':
+                    case '┐':
+                    case '┘':
+                    case '│':
+                         */
+                    }
+                }
+            }
+
+
         }
 
     }
