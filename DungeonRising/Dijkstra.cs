@@ -10,10 +10,13 @@ namespace DungeonRising
     {
         public int[,] DMap;
         public int Height, Width;
-        private const int DA = Dungeon.DARK, WL = Dungeon.WALL, FL = Dungeon.FLOOR, GOAL = 0;
+        private int[][] DirShuffled;
+        private const int GOAL = 0;
         private HashDictionary <int, int> goals, open, closed, fresh;
+        XSRandom r;
         public Dijkstra(int[,] level)
         {
+            r = new XSRandom();
             DMap = level.Replicate();
             Height = DMap.GetLength(0);
             Width = DMap.GetLength(1);
@@ -21,6 +24,38 @@ namespace DungeonRising
             open = new HashDictionary<int, int>();
             fresh = new HashDictionary<int, int>();
             closed = new HashDictionary<int, int>();
+
+            DirShuffled = new int[][]
+            {
+                new int[]{ -Width, 1, Width, -1},
+                new int[]{ -Width, 1, -1, Width},
+                new int[]{ -Width, Width, 1, -1},
+                new int[]{ -Width, -1, 1, Width},
+                new int[]{ -Width, Width, -1, 1},
+                new int[]{ -Width, -1, Width, 1},
+                
+                new int[]{ Width, 1, -Width, -1},
+                new int[]{ Width, 1, -1, -Width},
+                new int[]{ Width, -Width, 1, -1},
+                new int[]{ Width, -1, 1, -Width},
+                new int[]{ Width, -Width, -1, 1},
+                new int[]{ Width, -1, -Width, 1},
+                
+                new int[]{ 1, Width, -Width, -1},
+                new int[]{ 1, Width, -1, -Width},
+                new int[]{ 1, -Width, Width, -1},
+                new int[]{ 1, -1, Width, -Width},
+                new int[]{ 1, -Width, -1, Width},
+                new int[]{ 1, -1, -Width, Width},
+                
+                new int[]{ -1, Width, -Width, 1},
+                new int[]{ -1, Width, 1, -Width},
+                new int[]{ -1, -Width, Width, 1},
+                new int[]{ -1, 1, Width, -Width},
+                new int[]{ -1, -Width, 1, Width},
+                new int[]{ -1, 1, -Width, Width},
+                
+            };
         }
         public void SetGoal(int y, int x)
         {
@@ -84,12 +119,12 @@ namespace DungeonRising
             {
                 return ls;
             }
-            int[] dirs = { -Width, 1, Width, -1 };
             int currentPos = startY * Width + startX;
             ls.Add(currentPos);
             while (DMap.GetIndex(currentPos, Width) > 0)
             {
                 int best = 9999, choice = 0;
+                int[] dirs = DirShuffled[r.Next(24)];
                 for (int d = 0; d < 4; d++)
                 {
                     if (DMap.GetIndex(currentPos + dirs[d], Width) < best)
