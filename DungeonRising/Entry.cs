@@ -10,8 +10,10 @@ namespace DungeonRising
 {
     public class Entity
     {
-        public int X, Y;
+        public int X { get; protected set; }
+        public int Y { get; protected set; }
         public char Left, Right;
+        public Dijkstra Seeker;
         public Entity(string Representation, int Y, int X)
         {
             this.Left = Representation[0];
@@ -24,6 +26,13 @@ namespace DungeonRising
             this.Left = '.';
             this.X = 0;
             this.Y = 0;
+        }
+        public void Move(int yMove, int xMove)
+        {
+            Y += yMove;
+            X += xMove;
+            Seeker.GetPath(Y, X);
+
         }
     }
 
@@ -55,13 +64,11 @@ namespace DungeonRising
                 Color.FromArgb(0xff, 0x00, 0xff),
                 Color.FromArgb(0xff, 0x00, 0x77),
             };
-        private static Color LightGray = Color.FromArgb(211, 211, 211);
+        private static Color LightGray = Color.FromArgb(211, 211, 211), BloodRed = Color.FromArgb(0xbb, 0x1c, 0);
         public Dungeon DungeonStart;
         public char[,] World, Display;
         public int[,] LogicMap;
         public Entity Player;
-        public List<int> Path;
-        public Dijkstra Dijk;
         public static int Input = 0;
         Tuple<int, int> Goal;
 
@@ -79,10 +86,10 @@ namespace DungeonRising
             }
             Player = new Entity("@}", playerStart.Item1, playerStart.Item2);
 
-            Dijk = new Dijkstra(LogicMap);
-            Dijk.SetGoal(Goal.Item1, Goal.Item2);
-            Dijk.Scan();
-            Path = Dijk.GetPath(Player.Y, Player.X);
+            Player.Seeker = new Dijkstra(LogicMap);
+            Player.Seeker.SetGoal(Goal.Item1, Goal.Item2);
+            Player.Seeker.Scan();
+            Player.Seeker.GetPath(Player.Y, Player.X);
         }
 
         private static Entry Self;
@@ -126,7 +133,7 @@ namespace DungeonRising
                         Terminal.Put(x * 2 + 2, y + 1, '!');
                         Terminal.Color(LightGray);
                     }
-                    else if(Path.Contains(y * Dijk.Width + x))
+                    else if(Player.Seeker.Path.Contains(y * Player.Seeker.Width + x))
                     {
                         Terminal.Color(playerColors[currentColor]);
                         Terminal.Put(x * 2+ 1, y + 1, Display[y, x*2]);
@@ -154,8 +161,8 @@ namespace DungeonRising
                     case Terminal.TK_KP_4:
                     case Terminal.TK_H:
                         {
-                            if (LogicMap[Player.Y,Player.X - 1] == Dungeon.FLOOR)
-                                Player.X--;
+                            if (LogicMap[Player.Y, Player.X - 1] == Dungeon.FLOOR)
+                                Player.Move(0, -1);
                         }
                         break;
                     case Terminal.TK_RIGHT:
@@ -163,7 +170,7 @@ namespace DungeonRising
                     case Terminal.TK_L:
                         {
                             if (LogicMap[Player.Y, Player.X + 1] == Dungeon.FLOOR)
-                                Player.X++;
+                                Player.Move(0, 1);
                         }
                         break;
                     case Terminal.TK_UP:
@@ -171,7 +178,7 @@ namespace DungeonRising
                     case Terminal.TK_K:
                         {
                             if (LogicMap[Player.Y - 1, Player.X] == Dungeon.FLOOR)
-                                Player.Y--;
+                                Player.Move(-1, 0);
                         }
                         break;
                     case Terminal.TK_DOWN:
@@ -179,7 +186,7 @@ namespace DungeonRising
                     case Terminal.TK_J:
                         {
                             if (LogicMap[Player.Y + 1, Player.X] == Dungeon.FLOOR)
-                                Player.Y++;
+                                Player.Move(1, 0);
                         }
                         break;
                 }

@@ -8,8 +8,9 @@ namespace DungeonRising
 {
     public class Dijkstra
     {
-        public int[,] DMap;
+        public int[,] PhysicalMap, CombinedMap;
         public int Height, Width;
+        public List<int> Path;
         private int[][] DirShuffled;
         private const int GOAL = 0;
         private HashDictionary <int, int> goals, open, closed, fresh;
@@ -17,9 +18,10 @@ namespace DungeonRising
         public Dijkstra(int[,] level)
         {
             r = new XSRandom();
-            DMap = level.Replicate();
-            Height = DMap.GetLength(0);
-            Width = DMap.GetLength(1);
+            CombinedMap = PhysicalMap = level.Replicate();
+            Path = new List<int>();
+            Height = PhysicalMap.GetLength(0);
+            Width = PhysicalMap.GetLength(1);
             goals = new HashDictionary<int, int>();
             open = new HashDictionary<int, int>();
             fresh = new HashDictionary<int, int>();
@@ -59,21 +61,25 @@ namespace DungeonRising
         }
         public void SetGoal(int y, int x)
         {
-            if(DMap[y,x] > Dungeon.FLOOR)
+            if (PhysicalMap[y, x] > Dungeon.FLOOR)
             {
                 return;
             }
-            DMap[y, x] = GOAL;
+            CombinedMap[y, x] = GOAL;
             goals.Add(y * Width + x, GOAL);
+        }
+        public void SetOccupied(int y, int x)
+        {
+            CombinedMap[y, x] = Dungeon.WALL;
         }
         public void SetFresh(int y, int x, int counter)
         {
-            DMap[y, x] = counter;
+            CombinedMap[y, x] = counter;
             fresh.Add(y * Width + x, counter);
         }
         public void SetFresh(int index, int counter)
         {
-            DMap[index / Width, index % Width] = counter;
+            CombinedMap[index / Width, index % Width] = counter;
             fresh.Add(index, counter);
         }
         public int[,] Scan()
@@ -82,8 +88,8 @@ namespace DungeonRising
             {
                 for(int x = 0; x < Width; x++)
                 {
-                    if (DMap[y, x] > Dungeon.FLOOR)
-                        closed.Add(y * Width + x, DMap[y, x]);
+                    if (CombinedMap[y, x] > Dungeon.FLOOR)
+                        closed.Add(y * Width + x, PhysicalMap[y, x]);
                 }
             }
             int numAssigned = goals.Count;
@@ -99,7 +105,7 @@ namespace DungeonRising
                 {
                     for (int d = 0; d < 4; d++)
                     {
-                        if (!closed.Contains(cell.Key + dirs[d]) && !open.Contains(cell.Key + dirs[d]) && DMap.GetIndex(cell.Key, Width) + 1 < DMap.GetIndex(cell.Key + dirs[d], Width))
+                        if (!closed.Contains(cell.Key + dirs[d]) && !open.Contains(cell.Key + dirs[d]) && CombinedMap.GetIndex(cell.Key, Width) + 1 < CombinedMap.GetIndex(cell.Key + dirs[d], Width))
                         {
                             SetFresh(cell.Key + dirs[d], iter);
                             ++numAssigned;
@@ -110,33 +116,34 @@ namespace DungeonRising
                 open = fresh.Replicate();
                 fresh.Clear();
             }
-            return DMap;
+            return CombinedMap;
         }
+
         public List<int> GetPath(int startY, int startX)
         {
-            List<int> ls = new List<int>();
-            if(DMap[startY, startX] > Dungeon.FLOOR)
+            Path = new List<int>();
+            if (CombinedMap[startY, startX] > Dungeon.FLOOR)
             {
-                return ls;
+                return Path;
             }
             int currentPos = startY * Width + startX;
-            ls.Add(currentPos);
-            while (DMap.GetIndex(currentPos, Width) > 0)
+            Path.Add(currentPos);
+            while (CombinedMap.GetIndex(currentPos, Width) > 0)
             {
                 int best = 9999, choice = 0;
                 int[] dirs = DirShuffled[r.Next(24)];
                 for (int d = 0; d < 4; d++)
                 {
-                    if (DMap.GetIndex(currentPos + dirs[d], Width) < best)
+                    if (CombinedMap.GetIndex(currentPos + dirs[d], Width) < best)
                     {
-                        best = DMap.GetIndex(currentPos + dirs[d], Width);
+                        best = CombinedMap.GetIndex(currentPos + dirs[d], Width);
                         choice = d;
                     }
                 }
                 currentPos += dirs[choice];
-                ls.Add(currentPos);
+                Path.Add(currentPos);
             }
-            return ls;
+            return Path;
         }
         /*
 (defn find-cells [^doubles a cell-kind]
