@@ -31,7 +31,10 @@ namespace DungeonRising
         {
             Y += yMove;
             X += xMove;
-            Seeker.GetPath(Y, X);
+            Seeker.Reset();
+            Seeker.SetGoal(Y, X);
+            Seeker.Scan();
+            //Seeker.GetPath(Y, X);
 
         }
     }
@@ -87,9 +90,9 @@ namespace DungeonRising
             Player = new Entity("@}", playerStart.Item1, playerStart.Item2);
 
             Player.Seeker = new Dijkstra(LogicMap);
-            Player.Seeker.SetGoal(Goal.Item1, Goal.Item2);
+            Player.Seeker.SetGoal(Player.Y, Player.X);
             Player.Seeker.Scan();
-            Player.Seeker.GetPath(Player.Y, Player.X);
+            //            Player.Seeker.GetPath(Player.Y, Player.X);
         }
 
         private static Entry Self;
@@ -125,7 +128,7 @@ namespace DungeonRising
                         Terminal.Put(x * 2 + 2, y + 1, Player.Right);
                         Terminal.Color(LightGray);
                     }
-                    else if(Goal.Item1 == y && Goal.Item2 == x)
+                    else if (Terminal.State(Terminal.TK_MOUSE_Y) == y + 1 && (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 == x)
                     {
 
                         Terminal.Color(playerColors[(currentColor + 3) % playerColors.Length]);
@@ -157,6 +160,13 @@ namespace DungeonRising
 
                 switch (Input)
                 {
+                    case Terminal.TK_MOUSE_MOVE:
+                        {
+                            int ty = (Terminal.State(Terminal.TK_MOUSE_Y) - 1), tx = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2;
+                            if (ty >= 0 && ty < DungeonStart.Height && tx >= 0 && tx < DungeonStart.Width)
+                                Player.Seeker.GetPath(ty, tx);
+                        }
+                        break;
                     case Terminal.TK_LEFT:
                     case Terminal.TK_KP_4:
                     case Terminal.TK_H:

@@ -18,7 +18,8 @@ namespace DungeonRising
         public Dijkstra(int[,] level)
         {
             r = new XSRandom();
-            CombinedMap = PhysicalMap = level.Replicate();
+            CombinedMap = level.Replicate();
+            PhysicalMap = level.Replicate();
             Path = new List<int>();
             Height = PhysicalMap.GetLength(0);
             Width = PhysicalMap.GetLength(1);
@@ -58,6 +59,12 @@ namespace DungeonRising
                 new int[]{ -1, 1, -Width, Width},
                 
             };
+        }
+        public void Reset()
+        {
+            CombinedMap = PhysicalMap.Replicate();
+            goals.Clear();
+            Path.Clear();
         }
         public void SetGoal(int y, int x)
         {
@@ -116,12 +123,15 @@ namespace DungeonRising
                 open = fresh.Replicate();
                 fresh.Clear();
             }
+            open.Clear();
+            closed.Clear();
             return CombinedMap;
         }
 
         public List<int> GetPath(int startY, int startX)
         {
             Path = new List<int>();
+            int frustration = 0;
             if (CombinedMap[startY, startX] > Dungeon.FLOOR)
             {
                 return Path;
@@ -130,6 +140,8 @@ namespace DungeonRising
             Path.Add(currentPos);
             while (CombinedMap.GetIndex(currentPos, Width) > 0)
             {
+                if(frustration > 1000)
+                    return new List<int>();
                 int best = 9999, choice = 0;
                 int[] dirs = DirShuffled[r.Next(24)];
                 for (int d = 0; d < 4; d++)
@@ -142,6 +154,7 @@ namespace DungeonRising
                 }
                 currentPos += dirs[choice];
                 Path.Add(currentPos);
+                frustration++;
             }
             return Path;
         }
