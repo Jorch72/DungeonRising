@@ -87,7 +87,7 @@ namespace DungeonRising
             {
                 playerStart = World.RandomMatch('.');
             }
-            Player = new Entity("@}", playerStart.Item1, playerStart.Item2);
+            Player = new Entity("@\u1202", playerStart.Item1, playerStart.Item2);
 
             Player.Seeker = new Dijkstra(LogicMap);
             Player.Seeker.SetGoal(Player.Y, Player.X);
@@ -95,13 +95,13 @@ namespace DungeonRising
             //            Player.Seeker.GetPath(Player.Y, Player.X);
         }
 
-        private static Entry Self;
+        public static Entry Self = null;
         public static void Run()
         {
             Self = new Entry();
             Terminal.Open();
             Terminal.Set("log: level=trace");
-            Terminal.Set("window: title='Dungeon Rising', size=110x45; font: ./Zodiac-Narrow-6x12.png, size=6x12, codepage=./custom.txt;");
+            Terminal.Set("window: title='Dungeon Rising', size=110x45; font: Rogue-Zodiac-6x12.png, size=6x12, codepage=custom.txt;");
             Self.AnimationThread = new Thread(() => {
                 while (true)
                 {
