@@ -82,6 +82,7 @@
     <Compile Include="BearLibTerminal.cs" />
     <Compile Include="Dijkstra.cs" />
     <Compile Include="Dungeon.cs" />
+    <Compile Include="Entity.cs" />
     <Compile Include="Entry.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Herringbone.cs" />

@@ -10,7 +10,7 @@ namespace DungeonRising
     {
         public int[,] PhysicalMap, CombinedMap;
         public int Height, Width;
-        public List<int> Path;
+        public ArrayList<int> Path;
         private int[][] DirShuffled;
         private const int GOAL = 0;
         private HashDictionary <int, int> goals, open, closed, fresh;
@@ -20,7 +20,8 @@ namespace DungeonRising
             r = new XSRandom();
             CombinedMap = level.Replicate();
             PhysicalMap = level.Replicate();
-            Path = new List<int>();
+            Path = new ArrayList<int>();
+            
             Height = PhysicalMap.GetLength(0);
             Width = PhysicalMap.GetLength(1);
             goals = new HashDictionary<int, int>();
@@ -125,12 +126,25 @@ namespace DungeonRising
             }
             open.Clear();
             closed.Clear();
+
+
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    if(CombinedMap[y,x] == Dungeon.FLOOR)
+                    {
+                        CombinedMap[y, x] = Dungeon.DARK;
+                    }
+                }
+            }
+            
             return CombinedMap;
         }
 
-        public List<int> GetPath(int startY, int startX)
+        public ArrayList<int> GetPath(int startY, int startX)
         {
-            Path = new List<int>();
+            Path = new ArrayList<int>();
             int frustration = 0;
             if (CombinedMap[startY, startX] > Dungeon.FLOOR)
             {
@@ -141,7 +155,7 @@ namespace DungeonRising
             while (CombinedMap.GetIndex(currentPos, Width) > 0)
             {
                 if(frustration > 1000)
-                    return new List<int>();
+                    return new ArrayList<int>();
                 int best = 9999, choice = 0;
                 int[] dirs = DirShuffled[r.Next(24)];
                 for (int d = 0; d < 4; d++)

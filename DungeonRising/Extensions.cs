@@ -94,10 +94,10 @@ namespace DungeonRising
             }
             return mat;
         }
-        public static Tuple<int, int> RandomMatch<T>(this T[,] mat, T test)
+        public static Position RandomMatch<T>(this T[,] mat, T test)
         {
             if (mat.Length == 0)
-                return Tuple.Create(-1, -1);
+                return new Position(-1, -1);
             int frustration = 0;
 
             int coord1 = r.Next(mat.GetLength(0)), coord2 = r.Next(mat.GetLength(1));
@@ -108,9 +108,9 @@ namespace DungeonRising
                 frustration++;
             }
             if(frustration >= 20)
-                return Tuple.Create(-1, -1);
+                return new Position(-1, -1);
 
-            return Tuple.Create(coord1,coord2);
+            return new Position(coord1, coord2);
         }
 
 
