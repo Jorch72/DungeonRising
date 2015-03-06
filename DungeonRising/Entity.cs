@@ -12,8 +12,8 @@ namespace DungeonRising
     public class Entity
     {
         public string Name;
-        public int X { get; protected set; }
-        public int Y { get; protected set; }
+        public int X { get; set; }
+        public int Y { get; set; }
         public char Left, Right;
         public Dijkstra Seeker;
         public Entity(string Representation, int Y, int X)
@@ -39,24 +39,6 @@ namespace DungeonRising
             this.Right = ' ';
             this.X = 0;
             this.Y = 0;
-        }
-        public void Move(int yMove, int xMove)
-        {
-            Y += yMove;
-            X += xMove;
-            Seeker.Reset();
-            Seeker.SetGoal(Y, X);
-            Seeker.Scan();
-            //Seeker.GetPath(Y, X);
-        }
-        public int Step()
-        {
-            if (Seeker.Path == null || Seeker.Path.Count == 0)
-                return Seeker.Path.Count;
-            int nxt = Seeker.Path.Pop();
-            this.Y = nxt / Seeker.Width;
-            this.X = nxt % Seeker.Width;
-            return Seeker.Path.Count;
         }
     }
 
@@ -95,6 +77,32 @@ namespace DungeonRising
             byPosition.Remove(new Position(e.Y, e.X));
             byName.Remove(key);
         }
+
+        public void Move(string key, int yMove, int xMove)
+        {
+            if (!byName.Contains(key) || byPosition.Contains(new Position(byName[key].Y + yMove, byName[key].X + xMove)))
+                return;
+            Entity e = byName[key];
+            byPosition.Remove(new Position(e.Y, e.X));
+            byName.Remove(key);
+            e.Y += yMove;
+            e.X += xMove;
+            Add(key, e);
+            //Seeker.GetPath(Y, X);
+        }
+        public int Step(string key)
+        {
+            if (!byName.Contains(key))
+                return 0;
+            Entity e = byName[key];
+            if (e.Seeker.Path == null || e.Seeker.Path.Count == 0)
+                return e.Seeker.Path.Count;
+            int nxt = e.Seeker.Path.Pop();
+            Move(key, (nxt / e.Seeker.Width) - e.Y, (nxt % e.Seeker.Width) - e.X);
+            return e.Seeker.Path.Count;
+        }
+
+
         public Entity this[string key]
         {
             get

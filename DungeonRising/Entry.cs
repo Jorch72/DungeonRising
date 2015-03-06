@@ -71,7 +71,7 @@ namespace DungeonRising
         public int[,] LogicMap;
         public EntityDictionary Entities;
         public string CurrentActor;
-        public static int Input = 0;
+        public int Input = 0, StepsLeft = 0;
         public Position Cursor;
         public GameState CurrentState;
         private long Ticks;
@@ -146,21 +146,38 @@ namespace DungeonRising
                         Terminal.Put(x * 2 + 2, y + 1, '!');
                         Terminal.Color(LightGray);
                     }
-                    else if(seeker.Path.Contains(y * seeker.Width + x))
+                    else if (seeker.Path.Contains(y * seeker.Width + x))
                     {
                         Terminal.Color(playerColors[currentColor]);
-                        Terminal.Put(x * 2+ 1, y + 1, Display[y, x*2]);
-                        Terminal.Put(x * 2 + 2, y + 1, Display[y, x*2 + 1]);
+                        Terminal.Put(x * 2 + 1, y + 1, Display[y, x * 2]);
+                        Terminal.Put(x * 2 + 2, y + 1, Display[y, x * 2 + 1]);
                         Terminal.Color(LightGray);
                     }
                     else
                     {
-                        Terminal.Put(x * 2 + 1, y + 1, Display[y, x*2]);
-                        Terminal.Put(x * 2 + 2, y + 1, Display[y, x*2 + 1]);
+                        Terminal.Put(x * 2 + 1, y + 1, Display[y, x * 2]);
+                        Terminal.Put(x * 2 + 2, y + 1, Display[y, x * 2 + 1]);
                     }
                 }
             }
             Terminal.Refresh();
+            if (CurrentState == GameState.Animating)
+            {
+                StepsLeft = Entities.Step(CurrentActor);
+
+                if (StepsLeft <= 0)
+                {
+                    FinishMove();
+                    CurrentState = GameState.Receiving;
+                }
+            }
+        }
+
+        private void FinishMove()
+        {
+            Entities[CurrentActor].Seeker.Reset();
+            Entities[CurrentActor].Seeker.SetGoal(Entities[CurrentActor].Y, Entities[CurrentActor].X);
+            Entities[CurrentActor].Seeker.Scan();
         }
         public void RunEntry()
         {
@@ -171,53 +188,70 @@ namespace DungeonRising
                 {
                     case GameState.Animating:
                         {
-
                         }
                         break;
                     case GameState.Receiving:
                         {
-                            Entity acting = Entities[CurrentActor];
                             switch (Input)
                             {
+                                case Terminal.TK_MOUSE_LEFT:
+                                    {
+                                        Cursor.Y = (Terminal.State(Terminal.TK_MOUSE_Y) - 1);
+                                        Cursor.X = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2;
+                                        CurrentState = GameState.Animating;
+                                    }
+                                    break;
                                 case Terminal.TK_MOUSE_MOVE:
                                     {
                                         Cursor.Y = (Terminal.State(Terminal.TK_MOUSE_Y) - 1);
                                         Cursor.X = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2;
 
                                         if (Cursor.Validate(DungeonStart.Height, DungeonStart.Width))
-                                            acting.Seeker.GetPath(Cursor.Y, Cursor.X);
+                                            Entities[CurrentActor].Seeker.GetPath(Cursor.Y, Cursor.X);
                                     }
                                     break;
                                 case Terminal.TK_LEFT:
                                 case Terminal.TK_KP_4:
                                 case Terminal.TK_H:
                                     {
-                                        if (LogicMap[acting.Y, acting.X - 1] == Dungeon.FLOOR)
-                                            acting.Move(0, -1);
+                                        if (LogicMap[Entities[CurrentActor].Y, Entities[CurrentActor].X - 1] == Dungeon.FLOOR)
+                                        {
+                                            Entities.Move(CurrentActor, 0, -1);
+                                            FinishMove();
+                                        }
                                     }
                                     break;
                                 case Terminal.TK_RIGHT:
                                 case Terminal.TK_KP_6:
                                 case Terminal.TK_L:
                                     {
-                                        if (LogicMap[acting.Y, acting.X + 1] == Dungeon.FLOOR)
-                                            acting.Move(0, 1);
+                                        if (LogicMap[Entities[CurrentActor].Y, Entities[CurrentActor].X + 1] == Dungeon.FLOOR)
+                                        {
+                                            Entities.Move(CurrentActor, 0, 1);
+                                            FinishMove();
+                                        }
                                     }
                                     break;
                                 case Terminal.TK_UP:
                                 case Terminal.TK_KP_8:
                                 case Terminal.TK_K:
                                     {
-                                        if (LogicMap[acting.Y - 1, acting.X] == Dungeon.FLOOR)
-                                            acting.Move(-1, 0);
+                                        if (LogicMap[Entities[CurrentActor].Y - 1, Entities[CurrentActor].X] == Dungeon.FLOOR)
+                                        {
+                                            Entities.Move(CurrentActor, -1, 0);
+                                            FinishMove();
+                                        }
                                     }
                                     break;
                                 case Terminal.TK_DOWN:
                                 case Terminal.TK_KP_2:
                                 case Terminal.TK_J:
                                     {
-                                        if (LogicMap[acting.Y + 1, acting.X] == Dungeon.FLOOR)
-                                            acting.Move(1, 0);
+                                        if (LogicMap[Entities[CurrentActor].Y + 1, Entities[CurrentActor].X] == Dungeon.FLOOR)
+                                        {
+                                            Entities.Move(CurrentActor, 1, 0);
+                                            FinishMove();
+                                        }
                                     }
                                     break;
                             }
