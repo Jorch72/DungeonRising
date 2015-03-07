@@ -65,50 +65,75 @@ namespace DungeonRising
                 Color.FromArgb(0xff, 0x00, 0xff),
                 Color.FromArgb(0xff, 0x00, 0x77),
             }, highlightColors = new Color[] {
-                Color.FromArgb(0x33, 0x33, 0x33),
-                Color.FromArgb(0x44, 0x44, 0x44),
-                Color.FromArgb(0x55, 0x55, 0x55),
-                Color.FromArgb(0x66, 0x66, 0x66),
                 Color.FromArgb(0x77, 0x77, 0x77),
-                Color.FromArgb(0x66, 0x66, 0x66),
-                Color.FromArgb(0x55, 0x55, 0x55),
-                Color.FromArgb(0x44, 0x44, 0x44),
+                Color.FromArgb(0x88, 0x88, 0x88),
+                Color.FromArgb(0x99, 0x99, 0x99),
+                Color.FromArgb(0xaa, 0xaa, 0xaa),
+                Color.FromArgb(0xbb, 0xbb, 0xbb),
+                Color.FromArgb(0xaa, 0xaa, 0xaa),
+                Color.FromArgb(0x99, 0x99, 0x99),
+                Color.FromArgb(0x88, 0x88, 0x88),
             };
-        private static Color LightGray = Color.FromArgb(211, 211, 211), BloodRed = Color.FromArgb(0xbb, 0x1c, 0);
+        private static Color LightGray = Color.FromArgb(211, 211, 211), DarkGray = Color.FromArgb(0x17, 0x17, 0x17), BloodRed = Color.FromArgb(0xbb, 0x1c, 0x00);
         public Dungeon DungeonStart;
         public char[,] World, Display;
         public int[,] LogicMap;
         public EntityDictionary Entities;
         public string CurrentActor;
-        public int Input = 0, StepsLeft = 0;
+        public int Input = 0, StepsLeft = 0, StepsTaken = 0;
         public Position Cursor;
         public GameState CurrentState;
-        private long Ticks;
+        public Schedule Initiative;
+        private long Ticks, TurnsLeft;
+        public static string IconGlyphs = "ሀሁሂሃሄህሆሇለሉሊላሌልሎሏሐሑሒሓሔሕሖሗመሙሚማሜ";
         public Entry()
         {
             Entities = new EntityDictionary();
-            Position playerStart = new Position(-1, -1);
+            Initiative = new Schedule();
+            TurnsLeft = 0;
+            Position spawnPoint = new Position(-1, -1);
             do
             {
                 DungeonStart = new Dungeon(30, 40);
-                World = DungeonStart.DLevel;
-                playerStart = World.RandomMatch('.');
-            } while (playerStart.Y < 0);
+                LogicMap = DungeonStart.Level;
+                spawnPoint = LogicMap.RandomMatch(Dungeon.FLOOR);
+            } while (spawnPoint.Y < 0);
 
             Display = DungeonStart.PairLevel;
-            LogicMap = DungeonStart.Level;
-            Entity Player = new Entity("Player", "@\u1202", playerStart.Y, playerStart.X);
+            World = DungeonStart.DLevel;
+            Entity Player = new Entity("Player", "@ሂ", spawnPoint.Y, spawnPoint.X, 5, 3, 0); // \u1202
             CurrentActor = "Player";
-            Cursor = new Position(playerStart.Y, playerStart.X);
+            Cursor = new Position(spawnPoint.Y, spawnPoint.X);
             Player.Seeker = new Dijkstra(LogicMap);
             Player.Seeker.SetGoal(Player.Y, Player.X);
             Player.Seeker.Scan();
             Entities.Add("Player", Player);
-            CurrentState = GameState.Receiving;
+
+            spawnPoint = LogicMap.RandomMatch(Dungeon.FLOOR);
+            if(spawnPoint.Y >= 0)
+            {
+                Entity baddie = new Entity("Baddie", "bሙ", spawnPoint.Y, spawnPoint.X, 6, 2, -1);
+                baddie.Seeker = new Dijkstra(LogicMap);
+                baddie.Seeker.SetGoal(baddie.Y, baddie.X);
+                baddie.Seeker.Scan();
+                Entities.Add("Baddie", baddie);
+            }
+            ResetInitiative();
+            Entity first = Entities[Initiative.PeekTurn().Actor];
+            if (first.Faction == 0)
+                CurrentState = GameState.Receiving;
             //            Player.Seeker.GetPath(Player.Y, Player.X);
         }
 
         public static Entry Self = null;
+        private void ResetInitiative()
+        {
+            foreach (Entity e in Entities)
+            {
+                Initiative.AddTurn(e.Name, e.Delay);
+                TurnsLeft += e.ActSpeed;
+            }
+        }
         public static void Run()
         {
             Self = new Entry();
@@ -147,7 +172,7 @@ namespace DungeonRising
                     }
                     else
                     {
-                        Terminal.BkColor(Color.Black);
+                        Terminal.BkColor(LightGray);
                         Terminal.Put(x * 2 + 1, y + 1, ' ');
                         Terminal.Put(x * 2 + 2, y + 1, ' ');
 
@@ -164,10 +189,13 @@ namespace DungeonRising
                     Entity e = Entities[p];
                     if (e != null)
                     {
-                        Terminal.Color(playerColors[currentPlayerColor]);
+                        if(e.Faction == 0)
+                            Terminal.Color(playerColors[currentPlayerColor]);
+                        else
+                            Terminal.Color(BloodRed);
                         Terminal.Put(x * 2 + 1, y + 1, e.Left);
                         Terminal.Put(x * 2 + 2, y + 1, e.Right);
-                        Terminal.Color(LightGray);
+                        Terminal.Color(DarkGray);
                     }
                     else if (Cursor.Y == y && Cursor.X == x)
                     {
@@ -175,14 +203,14 @@ namespace DungeonRising
                         Terminal.Color(playerColors[(currentPlayerColor + 3) % playerColors.Length]);
                         Terminal.Put(x * 2 + 1, y + 1, 'X');
                         Terminal.Put(x * 2 + 2, y + 1, '!');
-                        Terminal.Color(LightGray);
+                        Terminal.Color(DarkGray);
                     }
-                    else if (seeker.Path.Contains(y * seeker.Width + x))
+                    else if (Entities[CurrentActor].Faction == 0 && seeker.Path.Contains(y * seeker.Width + x))
                     {
                         Terminal.Color(playerColors[currentPlayerColor]);
                         Terminal.Put(x * 2 + 1, y + 1, Display[y, x * 2]);
                         Terminal.Put(x * 2 + 2, y + 1, Display[y, x * 2 + 1]);
-                        Terminal.Color(LightGray);
+                        Terminal.Color(DarkGray);
                     }
                     else
                     {
@@ -196,20 +224,36 @@ namespace DungeonRising
             if (CurrentState == GameState.Animating)
             {
                 StepsLeft = Entities.Step(CurrentActor);
-
-                if (StepsLeft <= 0)
+                ++StepsTaken;
+                if (StepsLeft <= 0 || StepsTaken > Entities[CurrentActor].MoveSpeed)
                 {
                     FinishMove();
-                    CurrentState = GameState.Receiving;
                 }
             }
         }
 
         private void FinishMove()
         {
-            Entities[CurrentActor].Seeker.Reset();
-            Entities[CurrentActor].Seeker.SetGoal(Entities[CurrentActor].Y, Entities[CurrentActor].X);
-            Entities[CurrentActor].Seeker.Scan();
+            StepsTaken = 0;
+            Entity e = Entities[CurrentActor];
+            e.Seeker.Reset();
+            e.Seeker.SetGoal(e.Y, e.X);
+            e.Seeker.Scan();
+            Entity next = Entities[Initiative.NextTurn().Actor];
+
+            if (--TurnsLeft <= 0)
+                ResetInitiative();
+            Initiative.AddTurn(e.Name, e.Delay);
+            CurrentActor = next.Name;
+            if (next.Faction == 0)
+            {
+                CurrentState = GameState.Receiving;
+            }
+            else
+            {
+                CurrentState = GameState.Animating;
+                Entities[CurrentActor].Seeker.GetPath(Entities["Player"].Y, Entities["Player"].X);
+            }
         }
         public void RunEntry()
         {

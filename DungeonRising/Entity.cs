@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DungeonRising
 {
@@ -15,25 +14,45 @@ namespace DungeonRising
         public int X { get; set; }
         public int Y { get; set; }
         public char Left, Right;
-        public int MoveSpeed;
+        public int MoveSpeed, ActSpeed, Faction;
+        public double Delay { get { return 36.0 / ActSpeed; } }
         public Dijkstra Seeker;
-        public Entity(string Representation, int Y, int X)
+        public bool Equivalent(Entity other)
         {
-            this.Name = "";
-            this.Left = Representation[0];
-            this.Right = Representation[1];
-            this.X = X;
-            this.Y = Y;
-            this.MoveSpeed = 5;
+            return other != null && X == other.X && Y == other.Y && Left == other.Left && Right == other.Right;
         }
-        public Entity(string Name, string Representation, int Y, int X)
+        public Entity(string representation, int y, int x)
         {
-            this.Name = Name;
-            this.Left = Representation[0];
-            this.Right = Representation[1];
-            this.X = X;
-            this.Y = Y;
-            this.MoveSpeed = 5;
+            Name = "";
+            Left = representation[0];
+            Right = representation[1];
+            X = x;
+            Y = y;
+            MoveSpeed = 5;
+            ActSpeed = 1;
+            Faction = 0;
+        }
+        public Entity(string name, string representation, int y, int x, int moveSpeed, int actSpeed, int faction)
+        {
+            Name = name;
+            Left = representation[0];
+            Right = representation[1];
+            X = x;
+            Y = y;
+            MoveSpeed = moveSpeed;
+            ActSpeed = actSpeed;
+            Faction = faction;
+        }
+        public Entity(string name, string representation, int y, int x)
+        {
+            Name = name;
+            Left = representation[0];
+            Right = representation[1];
+            X = x;
+            Y = y;
+            MoveSpeed = 5;
+            ActSpeed = 1;
+            Faction = 0;
         }
         public Entity()
         {
@@ -43,6 +62,8 @@ namespace DungeonRising
             this.X = 0;
             this.Y = 0;
             this.MoveSpeed = 0;
+            this.ActSpeed = 1;
+            this.Faction = 0;
         }
     }
 

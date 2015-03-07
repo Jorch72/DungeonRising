@@ -87,6 +87,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Herringbone.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Schedule.cs" />
     <Compile Include="XSRandom.cs" />
   </ItemGroup>
   <ItemGroup>

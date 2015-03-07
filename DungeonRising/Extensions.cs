@@ -243,9 +243,9 @@ namespace DungeonRising
             }
             return dupe;
         }
-        public static C5.HashDictionary<K, V> Replicate<K, V>(this C5.HashDictionary<K, V> dict)
+        public static HashDictionary<K, V> Replicate<K, V>(this HashDictionary<K, V> dict)
         {
-            C5.HashDictionary<K, V> d = new C5.HashDictionary<K, V>();
+            HashDictionary<K, V> d = new HashDictionary<K, V>();
             d.AddAll(dict);
             return d;
         }
