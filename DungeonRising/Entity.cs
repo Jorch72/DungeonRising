@@ -15,6 +15,7 @@ namespace DungeonRising
         public int X { get; set; }
         public int Y { get; set; }
         public char Left, Right;
+        public int MoveSpeed;
         public Dijkstra Seeker;
         public Entity(string Representation, int Y, int X)
         {
@@ -23,6 +24,7 @@ namespace DungeonRising
             this.Right = Representation[1];
             this.X = X;
             this.Y = Y;
+            this.MoveSpeed = 5;
         }
         public Entity(string Name, string Representation, int Y, int X)
         {
@@ -31,6 +33,7 @@ namespace DungeonRising
             this.Right = Representation[1];
             this.X = X;
             this.Y = Y;
+            this.MoveSpeed = 5;
         }
         public Entity()
         {
@@ -39,6 +42,7 @@ namespace DungeonRising
             this.Right = ' ';
             this.X = 0;
             this.Y = 0;
+            this.MoveSpeed = 0;
         }
     }
 

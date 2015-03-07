@@ -49,14 +49,14 @@ namespace DungeonRising
     {
         
         private Thread AnimationThread;
-        private int currentColor = 0;
+        private int currentPlayerColor = 0, currentHighlightColor = 0;
 
         private static Color[] playerColors = new Color[] {
-                Color.FromArgb(0xff, 0, 0),
-                Color.FromArgb(0xff, 0x77, 0),
-                Color.FromArgb(0xff, 0xff, 0),
-                Color.FromArgb(0x77, 0xff, 0),
-                Color.FromArgb(0x00, 0xff, 0),
+                Color.FromArgb(0xff, 0x00, 0x00),
+                Color.FromArgb(0xff, 0x77, 0x00),
+                Color.FromArgb(0xff, 0xff, 0x00),
+                Color.FromArgb(0x77, 0xff, 0x00),
+                Color.FromArgb(0x00, 0xff, 0x00),
                 Color.FromArgb(0x00, 0xff, 0x77),
                 Color.FromArgb(0x00, 0xff, 0xff),
                 Color.FromArgb(0x00, 0x77, 0xff),
@@ -64,6 +64,15 @@ namespace DungeonRising
                 Color.FromArgb(0x77, 0x00, 0xff),
                 Color.FromArgb(0xff, 0x00, 0xff),
                 Color.FromArgb(0xff, 0x00, 0x77),
+            }, highlightColors = new Color[] {
+                Color.FromArgb(0x33, 0x33, 0x33),
+                Color.FromArgb(0x44, 0x44, 0x44),
+                Color.FromArgb(0x55, 0x55, 0x55),
+                Color.FromArgb(0x66, 0x66, 0x66),
+                Color.FromArgb(0x77, 0x77, 0x77),
+                Color.FromArgb(0x66, 0x66, 0x66),
+                Color.FromArgb(0x55, 0x55, 0x55),
+                Color.FromArgb(0x44, 0x44, 0x44),
             };
         private static Color LightGray = Color.FromArgb(211, 211, 211), BloodRed = Color.FromArgb(0xbb, 0x1c, 0);
         public Dungeon DungeonStart;
@@ -110,9 +119,10 @@ namespace DungeonRising
             Self.AnimationThread = new Thread(() => {
                 while (true)
                 {
-                    Self.currentColor = (Self.currentColor + 1) % 12;
+                    Self.currentPlayerColor = (Self.currentPlayerColor + 1) % 12;
+                    Self.currentHighlightColor = (Self.currentHighlightColor + 1) % 8;
                     Self.Render();
-                    Thread.Sleep(50);
+                    Thread.Sleep(70);
                     Self.Ticks++;
                 }
             });
@@ -124,6 +134,27 @@ namespace DungeonRising
         {
             Position p = new Position(0, 0);
             Dijkstra seeker = Entities[CurrentActor].Seeker;
+            Terminal.Layer(0);
+            for (int y = 0; y < World.GetLength(0); y++)
+            {
+                for (int x = 0; x < World.GetLength(1); x++)
+                {
+                    if (CurrentState == GameState.Receiving && seeker.CombinedMap[y, x] <= Entities[CurrentActor].MoveSpeed)
+                    {
+                        Terminal.BkColor(highlightColors[(currentHighlightColor + 100 - seeker.CombinedMap[y,x]) % highlightColors.Length]);
+                        Terminal.Put(x * 2 + 1, y + 1, ' ');
+                        Terminal.Put(x * 2 + 2, y + 1, ' ');
+                    }
+                    else
+                    {
+                        Terminal.BkColor(Color.Black);
+                        Terminal.Put(x * 2 + 1, y + 1, ' ');
+                        Terminal.Put(x * 2 + 2, y + 1, ' ');
+
+                    }
+                }
+            }
+            Terminal.Layer(1);
             for (int y = 0; y < World.GetLength(0); y++)
             {
                 for (int x = 0; x < World.GetLength(1); x++)
@@ -133,7 +164,7 @@ namespace DungeonRising
                     Entity e = Entities[p];
                     if (e != null)
                     {
-                        Terminal.Color(playerColors[currentColor]);
+                        Terminal.Color(playerColors[currentPlayerColor]);
                         Terminal.Put(x * 2 + 1, y + 1, e.Left);
                         Terminal.Put(x * 2 + 2, y + 1, e.Right);
                         Terminal.Color(LightGray);
@@ -141,14 +172,14 @@ namespace DungeonRising
                     else if (Cursor.Y == y && Cursor.X == x)
                     {
 
-                        Terminal.Color(playerColors[(currentColor + 3) % playerColors.Length]);
+                        Terminal.Color(playerColors[(currentPlayerColor + 3) % playerColors.Length]);
                         Terminal.Put(x * 2 + 1, y + 1, 'X');
                         Terminal.Put(x * 2 + 2, y + 1, '!');
                         Terminal.Color(LightGray);
                     }
                     else if (seeker.Path.Contains(y * seeker.Width + x))
                     {
-                        Terminal.Color(playerColors[currentColor]);
+                        Terminal.Color(playerColors[currentPlayerColor]);
                         Terminal.Put(x * 2 + 1, y + 1, Display[y, x * 2]);
                         Terminal.Put(x * 2 + 2, y + 1, Display[y, x * 2 + 1]);
                         Terminal.Color(LightGray);
@@ -160,6 +191,7 @@ namespace DungeonRising
                     }
                 }
             }
+
             Terminal.Refresh();
             if (CurrentState == GameState.Animating)
             {
@@ -198,7 +230,10 @@ namespace DungeonRising
                                     {
                                         Cursor.Y = (Terminal.State(Terminal.TK_MOUSE_Y) - 1);
                                         Cursor.X = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2;
-                                        CurrentState = GameState.Animating;
+                                        if (Entities[CurrentActor].Seeker.CombinedMap[Cursor.Y, Cursor.X] <= Entities[CurrentActor].MoveSpeed)
+                                        {
+                                            CurrentState = GameState.Animating;
+                                        }
                                     }
                                     break;
                                 case Terminal.TK_MOUSE_MOVE:
