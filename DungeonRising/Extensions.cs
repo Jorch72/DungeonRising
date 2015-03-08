@@ -8,12 +8,12 @@ namespace DungeonRising
 {
     public static class Extensions
     {
-        private static Random r = new Random();
+        //private static XSRandom XSSR = new XSRandom();
         public static T RandomElement<T>(this IEnumerable<T> list)
         {
             if (list.Count() == 0)
                 return default(T);
-            int idx = 0, tgt = r.Next(list.Count());
+            int idx = 0, tgt = XSSR.Next(list.Count());
             foreach (T t in list)
             {
                 if (tgt == idx)
@@ -39,12 +39,19 @@ namespace DungeonRising
             }
             return -1;
         }
+        public static T RandomElement<T>(this T[] arr)
+        {
+            if (arr.Length == 0)
+                return default(T);
+
+            return arr[XSSR.Next(arr.Length)];
+        }
         public static T RandomElement<T>(this T[,] mat)
         {
             if (mat.Length == 0)
                 return default(T);
 
-            return mat[r.Next(mat.GetLength(0)), r.Next(mat.GetLength(1))];
+            return mat[XSSR.Next(mat.GetLength(0)), XSSR.Next(mat.GetLength(1))];
         }
         public static T[,] Insert<T>(this T[,] mat, T[,] items, int coord1, int coord2)
         {
@@ -100,11 +107,11 @@ namespace DungeonRising
                 return new Position(-1, -1);
             int frustration = 0;
 
-            int coord1 = r.Next(mat.GetLength(0)), coord2 = r.Next(mat.GetLength(1));
+            int coord1 = XSSR.Next(mat.GetLength(0)), coord2 = XSSR.Next(mat.GetLength(1));
             while (frustration < 20 && !(System.Collections.Generic.EqualityComparer<T>.Default.Equals(mat[coord1, coord2], test)))
             {
-                coord1 = r.Next(mat.GetLength(0));
-                coord2 = r.Next(mat.GetLength(1));
+                coord1 = XSSR.Next(mat.GetLength(0));
+                coord2 = XSSR.Next(mat.GetLength(1));
                 frustration++;
             }
             if(frustration >= 20)

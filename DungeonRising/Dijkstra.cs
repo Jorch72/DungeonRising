@@ -14,10 +14,10 @@ namespace DungeonRising
         private int[][] DirShuffled;
         private const int GOAL = 0;
         private HashDictionary <int, int> goals, open, closed, fresh;
-        private static XSRandom r;
+//        private static XSRandom XSSR;
         public Dijkstra(int[,] level)
         {
-            r = new XSRandom();
+//            XSSR = new XSRandom();
             CombinedMap = level.Replicate();
             PhysicalMap = level.Replicate();
             Path = new ArrayList<int>();
@@ -157,7 +157,7 @@ namespace DungeonRising
                 if(frustration > 1000)
                     return new ArrayList<int>();
                 int best = 9999, choice = 0;
-                int[] dirs = DirShuffled[r.Next(24)];
+                int[] dirs = DirShuffled[XSSR.Next(24)];
                 for (int d = 0; d < 4; d++)
                 {
                     if (CombinedMap.GetIndex(currentPos + dirs[d], Width) < best)

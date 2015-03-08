@@ -35,10 +35,7 @@ namespace DungeonRising
         }
         public void AddTurn(string actor, double delay)
         {
-            Turn t = new Turn(actor, delay);
-            IPriorityQueueHandle<Turn> h = null;
-            scheduled.Add(t);
-            
+            scheduled.Add(new Turn(actor, delay));   
         }
         public Turn NextTurn()
         {

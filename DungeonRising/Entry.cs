@@ -101,7 +101,7 @@ namespace DungeonRising
 
             Display = DungeonStart.PairLevel;
             World = DungeonStart.DLevel;
-            Entity Player = new Entity("Player", "@ሂ", spawnPoint.Y, spawnPoint.X, 5, 3, 0); // \u1202
+            Entity Player = new Entity("Player", "@ሂ", spawnPoint.Y, spawnPoint.X, 5, 5, 0); // \u1202
             CurrentActor = "Player";
             Cursor = new Position(spawnPoint.Y, spawnPoint.X);
             Player.Seeker = new Dijkstra(LogicMap);
@@ -112,7 +112,7 @@ namespace DungeonRising
             spawnPoint = LogicMap.RandomMatch(Dungeon.FLOOR);
             if(spawnPoint.Y >= 0)
             {
-                Entity baddie = new Entity("Baddie", "bሙ", spawnPoint.Y, spawnPoint.X, 6, 2, -1);
+                Entity baddie = new Entity("Baddie", "bሙ", spawnPoint.Y, spawnPoint.X, 4, 3, -1);
                 baddie.Seeker = new Dijkstra(LogicMap);
                 baddie.Seeker.SetGoal(baddie.Y, baddie.X);
                 baddie.Seeker.Scan();
@@ -136,6 +136,7 @@ namespace DungeonRising
         }
         public static void Run()
         {
+            XSSR.Seed(System.DateTime.UtcNow.Ticks); //0x1337FEEDBEEFBA5E
             Self = new Entry();
             Terminal.Open();
             Terminal.Set("log: level=trace");
