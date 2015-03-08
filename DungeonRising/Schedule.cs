@@ -20,52 +20,35 @@ namespace DungeonRising
         }
         public int CompareTo(Turn other)
         {
-            return (this.Delay - other.Delay < 0.0) ? -1 : (this.Delay - other.Delay > 0.0) ? 1 : 0;
+            return (this.Delay - other.Delay < 0.0) ? -1 : (this.Delay - other.Delay > 0.0) ? 1 : (this.Actor.CompareTo(other.Actor));
         }
+        
     }
+
+
     public class Schedule
     {
-        protected IntervalHeap<Turn> scheduled;
-        protected HashDictionary<string, ArrayList<IPriorityQueueHandle<Turn>>> lookups;
+        protected SortedArray<Turn> scheduled;
         public Schedule()
         {
-            scheduled = new IntervalHeap<Turn>(512);
-            lookups = new HashDictionary<string, ArrayList<IPriorityQueueHandle<Turn>>>();
+            scheduled = new SortedArray<Turn>(512);
         }
         public void AddTurn(string actor, double delay)
         {
             Turn t = new Turn(actor, delay);
             IPriorityQueueHandle<Turn> h = null;
-            scheduled.Add(ref h, t);
-            if(lookups.Contains(actor))
-            {
-                lookups[actor].Add(h);
-            }
-            else
-            {
-                lookups[actor] = new ArrayList<IPriorityQueueHandle<Turn>> { h };
-            }
+            scheduled.Add(t);
+            
         }
         public Turn NextTurn()
         {
-            IPriorityQueueHandle<Turn> h = null;
-            Turn nxt = scheduled.DeleteMin(out h);
-            if(lookups.Contains(nxt.Actor))
+            Turn nxt = scheduled.DeleteMin();
+            
+            foreach (Turn t in scheduled)
             {
-                lookups[nxt.Actor].Remove(h);
-                if(lookups[nxt.Actor].Count == 0)
-                {
-                    lookups.Remove(nxt.Actor);
-                }
+                t.Delay -= nxt.Delay;
             }
-            foreach (KeyValuePair<string, ArrayList<IPriorityQueueHandle<Turn>>> kv in lookups)
-            {
-                foreach(IPriorityQueueHandle<Turn> hand in kv.Value)
-                {
-                    scheduled[hand].Delay -= nxt.Delay;
-                }
-            }
-            //scheduled.UpdateAll(-(nxt.ActSpeed));
+
             return nxt;
         }
         public Turn PeekTurn()
@@ -74,13 +57,12 @@ namespace DungeonRising
         }
         public void CancelTurn(string cancelled)
         {
-            if(lookups.Contains(cancelled))
+            foreach (Turn t in scheduled)
             {
-                foreach(IPriorityQueueHandle<Turn> h in lookups[cancelled])
+                if (t.Actor == cancelled)
                 {
-                    scheduled.Delete(h);
+                    scheduled.Remove(t);
                 }
-                lookups.Remove(cancelled);
             }
         }
     }
