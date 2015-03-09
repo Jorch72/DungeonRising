@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Drawing;
 
 namespace DungeonRising
 {
@@ -11,9 +12,10 @@ namespace DungeonRising
     public class Entity
     {
         public string Name;
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int X;
+        public int Y;
         public char Left, Right;
+        public Color Coloring;
         public int MoveSpeed, ActSpeed, Faction;
         public double Delay { get { return 36.0 / ActSpeed; } }
         public Dijkstra Seeker;
@@ -26,17 +28,19 @@ namespace DungeonRising
             Name = "";
             Left = representation[0];
             Right = representation[1];
+            Coloring = Color.DimGray;
             X = x;
             Y = y;
             MoveSpeed = 5;
             ActSpeed = 1;
             Faction = 0;
         }
-        public Entity(string name, string representation, int y, int x, int moveSpeed, int actSpeed, int faction)
+        public Entity(string name, string representation, Color coloring, int y, int x, int moveSpeed, int actSpeed, int faction)
         {
             Name = name;
             Left = representation[0];
             Right = representation[1];
+            Coloring = coloring;
             X = x;
             Y = y;
             MoveSpeed = moveSpeed;
@@ -48,6 +52,7 @@ namespace DungeonRising
             Name = name;
             Left = representation[0];
             Right = representation[1];
+            Coloring = Color.DimGray;
             X = x;
             Y = y;
             MoveSpeed = 5;
@@ -59,6 +64,7 @@ namespace DungeonRising
             this.Name = "";
             this.Left = '.';
             this.Right = ' ';
+            Coloring = Color.DimGray;
             this.X = 0;
             this.Y = 0;
             this.MoveSpeed = 0;
