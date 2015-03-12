@@ -10,18 +10,14 @@ namespace DungeonRising
     {
         public const int FLOOR = 5000, WALL = 9999, DARK = 11111;
         public int Height { get; protected set; }
-        public int Width  { get; protected set; }
-        public static Dictionary<char, int> Mapping = new Dictionary<char, int>(256);
+        public int Width { get; protected set; }
         public char[,] DLevel { get; set; }
         public char[,] PairLevel { get; set; }
         public int[,] Level { get; set; }
-        static Dungeon()
-        {
-            for(int c = 0; c < 128; c++)
-            {
-                Mapping.Add((char)c, c);
-            }
-            /*
+        public Position entrance;
+        private Dijkstra scanner;
+        private BoneGen bone;
+        /*
 0123456789ABCDEF
 ─━│┃┄┅┆┇┈┉┊┋┌┍┎┏ 2500
 ┐┑┒┓└┕┖┗┘┙┚┛├┝┞┟ 2510
@@ -31,34 +27,47 @@ namespace DungeonRising
 ═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟ 2550
 ╠╡╢╣╤╥╦╧╨╩╪╫╬╭╮╯ 2560
 ╰╱╲╳╴╵╶╷╸╹╺╻╼╽╾╿ 2570
-             */
-            for (int c = 0; c < 128; c++)
-            {
-                Mapping.Add((char)(c + 0x2500), c + 128);
-            }
-            
-        }
+         */
+
         public Dungeon()
         {
-            Height = 60;
-            Width = 60;
-            DLevel = new char[Height, Width];
-            Level = new int[Height, Width];
-            DLevel.Fill('#');
-            PlaceBones();
+            do
+            {
+                Height = 60;
+                Width = 60;
+                bone = new BoneGen(XSSR.xsr);
+                DLevel = BoneGen.WallWrap(bone.Generate(TilesetType.DEFAULT_DUNGEON, Height, Width));
+                PairLevel = new char[Height, Width * 2];
+                Level = new int[Height, Width];
+            } while (!PlaceBones());
         }
         public Dungeon(int height, int width)
         {
-            Height = height;
-            Width = width;
-            DLevel = new char[Height, Width];
-            PairLevel = new char[Height, Width * 2];
-            Level = new int[Height, Width];
-            DLevel.Fill('#');
-            PlaceBones();
+            do
+            {
+                Height = height;
+                Width = width;
+                bone = new BoneGen(XSSR.xsr);
+                DLevel = BoneGen.WallWrap(bone.Generate(TilesetType.DEFAULT_DUNGEON, Height, Width));
+                PairLevel = new char[Height, Width * 2];
+                Level = new int[Height, Width];
+            } while (!PlaceBones());
         }
-        public void PlaceBones()
+        public Dungeon(TilesetType tt, int height, int width)
         {
+            do
+            {
+                Height = height;
+                Width = width;
+                bone = new BoneGen(XSSR.xsr);
+                DLevel = BoneGen.WallWrap(bone.Generate(tt, Height, Width));
+                PairLevel = new char[Height, Width * 2];
+                Level = new int[Height, Width];
+            } while (!PlaceBones());
+        }
+        public bool PlaceBones()
+        {
+            /*
             for (int sy = Height + 10; sy > -Width - 20; sy -= 40)
             {
                 for (int x = -10, y = sy; x < Width + 20 && y < Height + 20; x += 10, y += 10)
@@ -87,7 +96,7 @@ namespace DungeonRising
                 DLevel[y, Width - 1] = '#';
                 DLevel[y, Width - 2] = '#';
             }
-
+            */
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
@@ -119,6 +128,36 @@ namespace DungeonRising
                     }
                 }
             }
+            entrance = Level.RandomMatch(FLOOR);
+            if (entrance.Y < 0) return false;
+
+            Level = Level.Surround(DARK);
+            DLevel = DLevel.Surround(' ');
+            Height += 2;
+            Width += 2;
+
+            scanner = new Dijkstra(Level);
+            scanner.Reset();
+            scanner.SetGoal(entrance.Y + 1, entrance.X + 1);
+            scanner.Scan();
+            int floorCount = 0;
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    if (scanner.CombinedMap[y, x] == DARK)
+                    {
+                        Level[y, x] = DARK;
+                        DLevel[y, x] = ' ';
+                    }
+                    else if (scanner.CombinedMap[y, x] < FLOOR)
+                    {
+                        ++floorCount;
+                    }
+                }
+            }
+            if (floorCount < Height * Width * 0.125)
+                return false;
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
@@ -263,16 +302,16 @@ namespace DungeonRising
                                 switch (DLevel[y - 1, x])
                                 {
                                     case '┼':
-                                        DLevel[y-1, x] = '┴';
+                                        DLevel[y - 1, x] = '┴';
                                         break;
                                     case '├':
-                                        DLevel[y-1, x] = '└';
+                                        DLevel[y - 1, x] = '└';
                                         break;
                                     case '┤':
-                                        DLevel[y-1, x] = '┘';
+                                        DLevel[y - 1, x] = '┘';
                                         break;
                                     case '┬':
-                                        DLevel[y-1, x] = '─';
+                                        DLevel[y - 1, x] = '─';
                                         break;
 
                                 }
@@ -289,12 +328,12 @@ namespace DungeonRising
                     // ┼ ├ ┤ ┴ ┬ ┌ ┐ └ ┘ │ ─
                     if (DLevel[y, x] == '┼' || DLevel[y, x] == '┤' || DLevel[y, x] == '┬' || DLevel[y, x] == '┴')
                     {
-                        if (DLevel[y, x-1] == '┼' || DLevel[y, x-1] == '├' || DLevel[y, x-1] == '┬' || DLevel[y, x-1] == '┴')
+                        if (DLevel[y, x - 1] == '┼' || DLevel[y, x - 1] == '├' || DLevel[y, x - 1] == '┬' || DLevel[y, x - 1] == '┴')
                         {
-                            if ((y >= Height - 1 || x >= Width - 1 || Level[y + 1, x -1] == WALL || Level[y + 1, x - 1] == DARK) &&
-                             (y <= 0 || x <= 0 || Level[y - 1, x - 1] == WALL || Level[y - 1, x - 1] == DARK) &&
-                             (y >= Height - 1 || Level[y + 1, x] == WALL || Level[y + 1, x] == DARK) &&
-                             (y <= 0 || Level[y - 1, x] == WALL || Level[y - 1, x] == DARK))
+                            if ((y >= Height - 1 || x >= Width - 1 || Level[y + 1, x - 1] == WALL || Level[y + 1, x - 1] == DARK) &&
+                                                         (y <= 0 || x <= 0 || Level[y - 1, x - 1] == WALL || Level[y - 1, x - 1] == DARK) &&
+                                                         (y >= Height - 1 || Level[y + 1, x] == WALL || Level[y + 1, x] == DARK) &&
+                                                         (y <= 0 || Level[y - 1, x] == WALL || Level[y - 1, x] == DARK))
                             {
                                 switch (DLevel[y, x])
                                 {
@@ -332,15 +371,20 @@ namespace DungeonRising
                     }
                 }
             }
-            
-            for(int y = 0; y < Height; y++)
+            Height -= 2;
+            Width -= 2;
+            Level = Level.Portion(1, 1, Height, Width);
+            DLevel = DLevel.Portion(1, 1, Height, Width);
+
+
+            for (int y = 0; y < Height; y++)
             {
-                for(int x = 0, px = 0; x < Width; x++, px += 2)
+                for (int x = 0, px = 0; x < Width; x++, px += 2)
                 {
                     PairLevel[y, px] = DLevel[y, x];
-                    switch(PairLevel[y, px])
+                    switch (PairLevel[y, px])
                     {
-//                        case '┼ ├ ┤ ┴ ┬ ┌ ┐ └ ┘ │ ─'
+                        //                        case '┼ ├ ┤ ┴ ┬ ┌ ┐ └ ┘ │ ─'
                         case '┼':
                         case '├':
                         case '┴':
@@ -365,7 +409,7 @@ namespace DungeonRising
                 }
             }
 
-
+            return true;
         }
 
     }

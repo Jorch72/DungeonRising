@@ -69,6 +69,10 @@
     <Reference Include="C5">
       <HintPath>..\packages\C5.2.3.0.1\lib\net40\C5.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -80,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BearLibTerminal.cs" />
+    <Compile Include="BoneGen.cs" />
     <Compile Include="Dijkstra.cs" />
     <Compile Include="Dungeon.cs" />
     <Compile Include="Entity.cs" />
@@ -92,6 +97,27 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\caves_limit_connectivity.js" />
+    <EmbeddedResource Include="resources\caves_tiny_corridors.js" />
+    <EmbeddedResource Include="resources\corner_caves.js" />
+    <EmbeddedResource Include="resources\default_dungeon.js" />
+    <EmbeddedResource Include="resources\horizontal_corridors_v1.js" />
+    <EmbeddedResource Include="resources\horizontal_corridors_v2.js" />
+    <EmbeddedResource Include="resources\horizontal_corridors_v3.js" />
+    <EmbeddedResource Include="resources\limited_connectivity.js" />
+    <EmbeddedResource Include="resources\limit_connectivity_fat.js" />
+    <EmbeddedResource Include="resources\maze_2_wide.js" />
+    <EmbeddedResource Include="resources\maze_plus_2_wide.js" />
+    <EmbeddedResource Include="resources\open_areas.js" />
+    <EmbeddedResource Include="resources\ref2_corner_caves.js" />
+    <EmbeddedResource Include="resources\rooms_and_corridors.js" />
+    <EmbeddedResource Include="resources\rooms_and_corridors_2_wide_diagonal_bias.js" />
+    <EmbeddedResource Include="resources\rooms_limit_connectivity.js" />
+    <EmbeddedResource Include="resources\round_rooms_diagonal_corridors.js" />
+    <EmbeddedResource Include="resources\simple_caves_2_wide.js" />
+    <EmbeddedResource Include="resources\square_rooms_with_random_rects.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

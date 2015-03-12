@@ -53,6 +53,17 @@ namespace DungeonRising
 
             return mat[XSSR.Next(mat.GetLength(0)), XSSR.Next(mat.GetLength(1))];
         }
+        /// <summary>
+        /// Insert and replace a section of a larger 2D array with a smaller one.
+        /// If coords are only partially in-bounds, only the section that is within the
+        /// boundaries of the larger 'mat' will be replaced.
+        /// </summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="mat">A 2d array, will be modified.</param>
+        /// <param name="items">A (possibly) smaller 2D array to be inserted.</param>
+        /// <param name="coord1">The coordinate to be given first as an index to mat and items.</param>
+        /// <param name="coord2">The coordnate to be given second as an index to mat and items.</param>
+        /// <returns></returns>
         public static T[,] Insert<T>(this T[,] mat, T[,] items, int coord1, int coord2)
         {
             if (mat.Length == 0 || items.Length == 0)
@@ -69,14 +80,25 @@ namespace DungeonRising
             }
             return mat;
         }
+        /// <summary>
+        /// Insert and replace a section of a larger 2D array with a smaller one, here a jagged smaller array.
+        /// If coords are only partially in-bounds, only the section that is within the
+        /// boundaries of the larger 'mat' will be replaced.
+        /// </summary>
+        /// <typeparam name="T">Any type.</typeparam>
+        /// <param name="mat">A 2d array, will be modified.</param>
+        /// <param name="items">A (possibly) smaller jagged array to be inserted.</param>
+        /// <param name="coord1">The coordinate to be given first as an index to mat and items.</param>
+        /// <param name="coord2">The coordnate to be given second as an index to mat and items.</param>
+        /// <returns></returns>
         public static T[,] Insert<T>(this T[,] mat, T[][] items, int coord1, int coord2)
         {
-            if (mat.Length == 0 || items.Length == 0 || items[0].Length == 0)
+            if (mat.Length == 0 || items.Length == 0)
                 return mat;
 
             for (int i = coord1, i1 = 0; i1 < items.Length; i++, i1++)
             {
-                for (int j = coord2, j2 = 0; j2 < items[0].Length; j++, j2++)
+                for (int j = coord2, j2 = 0; j2 < items[i1].Length; j++, j2++)
                 {
                     if (i < 0 || j < 0 || i >= mat.GetLength(0) || j >= mat.GetLength(1))
                         continue;
@@ -85,14 +107,25 @@ namespace DungeonRising
             }
             return mat;
         }
+        /// <summary>
+        /// Insert and replace a section of a larger 2D char array with a smaller one here a 1D
+        /// array of strings that is used as a 2D grid of chars.
+        /// If coords are only partially in-bounds, only the section that is within the
+        /// boundaries of the larger 'mat' will be replaced.
+        /// </summary>
+        /// <param name="mat">A 2d array, will be modified.</param>
+        /// <param name="items">A (possibly) smaller (and possibly jagged) array of strings to be inserted.</param>
+        /// <param name="coord1">The coordinate to be given first as an index to mat and items.</param>
+        /// <param name="coord2">The coordnate to be given second as an index to mat and items.</param>
+        /// <returns></returns>
         public static char[,] Insert(this char[,] mat, string[] items, int coord1, int coord2)
         {
-            if (mat.Length == 0 || items.Length == 0 || items[0].Length == 0)
+            if (mat.Length == 0 || items.Length == 0)
                 return mat;
 
             for (int i = coord1, i1 = 0; i1 < items.Length; i++, i1++)
             {
-                for (int j = coord2, j2 = 0; j2 < items[0].Length; j++, j2++)
+                for (int j = coord2, j2 = 0; j2 < items[i1].Length; j++, j2++)
                 {
                     if (i < 0 || j < 0 || i >= mat.GetLength(0) || j >= mat.GetLength(1))
                         continue;
@@ -101,14 +134,50 @@ namespace DungeonRising
             }
             return mat;
         }
+        public static T[,] Portion<T>(this T[,] mat, int coord1, int coord2, int span1, int span2)
+        {
+            T[,] portion = new T[span1, span2];
+            for (int i = 0; i < span1; i++)
+            {
+                for (int j = 0; j < span2; j++)
+                {
+                    portion[i, j] = mat[coord1 + i, coord2 + j];
+                }
+            }
+            return portion;
+        }
+
+        public static T[,] Surround<T>(this T[,] mat, T surrounder)
+        {
+            T[,] expanded = new T[mat.GetLength(0)+2, mat.GetLength(1)+2];
+            for (int i = 0; i < mat.GetLength(0); i++)
+            {
+                for (int j = 0; j < mat.GetLength(1); j++)
+                {
+                    expanded[i+1, j+1] = mat[i, j];
+                }
+            }
+            for (int i = 0; i < mat.GetLength(0) + 2; i++)
+            {
+                expanded[i, 0] = surrounder;
+                expanded[i, mat.GetLength(0) + 1] = surrounder;
+            }
+            for (int j = 1; j < mat.GetLength(1) + 1; j++)
+            {
+                expanded[0, j] = surrounder;
+                expanded[mat.GetLength(1) + 1, j] = surrounder;
+            }
+            return expanded;
+        }
         public static Position RandomMatch<T>(this T[,] mat, T test)
+            where T : IEquatable<T>
         {
             if (mat.Length == 0)
                 return new Position(-1, -1);
             int frustration = 0;
 
             int coord1 = XSSR.Next(mat.GetLength(0)), coord2 = XSSR.Next(mat.GetLength(1));
-            while (frustration < 20 && !(System.Collections.Generic.EqualityComparer<T>.Default.Equals(mat[coord1, coord2], test)))
+            while (frustration < 20 && !(test.Equals(mat[coord1, coord2]))) //System.Collections.Generic.EqualityComparer<T>.Default.Equals
             {
                 coord1 = XSSR.Next(mat.GetLength(0));
                 coord2 = XSSR.Next(mat.GetLength(1));

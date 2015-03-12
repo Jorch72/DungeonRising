@@ -95,7 +95,7 @@ namespace DungeonRising
             Position spawnPoint = new Position(-1, -1);
             do
             {
-                DungeonStart = new Dungeon(60, 60);
+                DungeonStart = new Dungeon(TilesetType.ROUND_ROOMS_DIAGONAL_CORRIDORS, 60, 60);
                 LogicMap = DungeonStart.Level;
                 spawnPoint = LogicMap.RandomMatch(Dungeon.FLOOR);
             } while (spawnPoint.Y < 0);
