@@ -96,6 +96,11 @@ namespace DungeonRising
         {
             return byPosition.Contains(p);
         }
+        public void Add(Entity val)
+        {
+            byPosition.Add(new Position(val.Y, val.X), val);
+            byName.Add(val.Name, val);
+        }
         public void Add(string key, Entity val)
         {
             val.Name = key;
@@ -114,11 +119,23 @@ namespace DungeonRising
             if (!byName.Contains(key) || byPosition.Contains(new Position(byName[key].Y + yMove, byName[key].X + xMove)))
                 return;
             Entity e = byName[key];
-            byPosition.Remove(new Position(e.Y, e.X));
+            Position pos = new Position(e.Y, e.X);
+            byPosition.Remove(pos);
             byName.Remove(key);
             e.Y += yMove;
             e.X += xMove;
             Add(key, e);
+            /*foreach(var kv in byName)
+            {
+                kv.Value.Seeker.ResetCell(pos.Y, pos.X);
+                //kv.Value.Seeker.SetOccupied(e.Y, e.X);
+            }*/
+            e.Seeker.SetGoal(e.Y, e.X);
+
+            foreach (var kv in byName)
+            {
+                kv.Value.Seeker.Scan();
+            }
             //Seeker.GetPath(Y, X);
         }
         public int Step(string key)

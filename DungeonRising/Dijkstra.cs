@@ -80,12 +80,19 @@ namespace DungeonRising
         {
             CombinedMap[y, x] = Dungeon.WALL;
         }
-        public void SetFresh(int y, int x, int counter)
+        public void ResetCell(int y, int x)
+        {
+            if (CombinedMap[y, x] == GOAL)
+                goals.Remove(y * Width + x);
+                
+            CombinedMap[y, x] = PhysicalMap[y, x];
+        }
+        protected void SetFresh(int y, int x, int counter)
         {
             CombinedMap[y, x] = counter;
             fresh.Add(y * Width + x, counter);
         }
-        public void SetFresh(int index, int counter)
+        protected void SetFresh(int index, int counter)
         {
             CombinedMap[index / Width, index % Width] = counter;
             fresh.Add(index, counter);

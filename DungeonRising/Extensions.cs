@@ -175,18 +175,37 @@ namespace DungeonRising
             if (mat.Length == 0)
                 return new Position(-1, -1);
             int frustration = 0;
-
-            int coord1 = XSSR.Next(mat.GetLength(0)), coord2 = XSSR.Next(mat.GetLength(1));
-            while (frustration < 20 && !(test.Equals(mat[coord1, coord2]))) //System.Collections.Generic.EqualityComparer<T>.Default.Equals
+            int span0 = mat.GetLength(0), span1 = mat.GetLength(1);
+            int coord0 = XSSR.Next(span0), coord1 = XSSR.Next(span1);
+            while (frustration < 20 && !(test.Equals(mat[coord0, coord1]))) //System.Collections.Generic.EqualityComparer<T>.Default.Equals
             {
-                coord1 = XSSR.Next(mat.GetLength(0));
-                coord2 = XSSR.Next(mat.GetLength(1));
+                coord0 = XSSR.Next(span0);
+                coord1 = XSSR.Next(span1);
                 frustration++;
             }
-            if(frustration >= 20)
-                return new Position(-1, -1);
-
-            return new Position(coord1, coord2);
+            if (frustration >= 20)
+            {
+                ArrayList<int> iii = new ArrayList<int>(span0 * span1), jjj = new ArrayList<int>(span0 * span1);
+                for (int i = 0; i < span0; i++ )
+                {
+                    for(int j = 0; j < span1; j++)
+                    {
+                        if(test.Equals(mat[i,j]))
+                        {
+                            iii.Add(i);
+                            jjj.Add(j);
+                        }
+                    }
+                }
+                if(iii.IsEmpty)
+                    return new Position(-1, -1);
+                else
+                {
+                    int idx = XSSR.Next(iii.Count);
+                    return new Position(iii[idx], jjj[idx]);
+                }
+            }
+            return new Position(coord0, coord1);
         }
 
 

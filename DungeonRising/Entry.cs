@@ -22,6 +22,17 @@ namespace DungeonRising
         {
             return (Y >= 0 && Y < Height && X >= 0 && X < Width);
         }
+        public void MakeValid(int Height, int Width)
+        {
+            if (Y < 0)
+                Y = 0;
+            if (Y >= Height)
+                Y = Height - 1;
+            if (X < 0)
+                X = 0;
+            if (X >= Width)
+                X = Width - 1;
+        }
         public static Position FromIndex(int index, int Width)
         {
             return new Position(index / Width, index % Width);
@@ -110,15 +121,17 @@ namespace DungeonRising
             Player.Seeker.SetGoal(Player.Y, Player.X);
             Player.Seeker.Scan();
             Entities.Add("Player", Player);
-
-            spawnPoint = LogicMap.RandomMatch(Dungeon.FLOOR);
-            if(spawnPoint.Y >= 0)
+            for (int i = 0; i < 25; i++)
             {
-                Entity baddie = new Entity("Baddie", "bሙ", BloodRed, spawnPoint.Y, spawnPoint.X, 4, 3, -1);
-                baddie.Seeker = new Dijkstra(LogicMap);
-                baddie.Seeker.SetGoal(baddie.Y, baddie.X);
-                baddie.Seeker.Scan();
-                Entities.Add("Baddie", baddie);
+                spawnPoint = LogicMap.RandomMatch(Dungeon.FLOOR);
+                if (spawnPoint.Y >= 0 && !Entities.Contains(spawnPoint))
+                {
+                    Entity baddie = new Entity("Baddie " + (char)(65 + i), "b" + IconGlyphs.RandomElement(), BloodRed, spawnPoint.Y, spawnPoint.X, 4, XSSR.Next(1, 5), -1);
+                    baddie.Seeker = new Dijkstra(LogicMap);
+                    baddie.Seeker.SetGoal(baddie.Y, baddie.X);
+                    baddie.Seeker.Scan();
+                    Entities.Add(baddie);
+                }
             }
             ResetInitiative();
             Entity first = Entities[Initiative.PeekTurn().Actor];
@@ -236,6 +249,10 @@ namespace DungeonRising
                         Terminal.Put(sx * 2 + 2, sy + 1, PairedWorld[y, x * 2 + 1]);
                         Terminal.Color(DarkGray);
                     }
+/*                    else if(seeker.CombinedMap[y, x] < 100)
+                    {
+                        Terminal.Print(sx * 2 + 1, sy + 1, "" + seeker.CombinedMap[y, x]);
+                    }*/
                     else
                     {
                         Terminal.Put(sx * 2 + 1, sy + 1, PairedWorld[y, x * 2]);
@@ -243,6 +260,11 @@ namespace DungeonRising
                     }
                 }
             }
+
+            Terminal.Print(60,  9, "Acting: " + CurrentActor);
+/*            Terminal.Print(60, 10, "Y: " + Cursor.Y + ", X: " + Cursor.X);
+            Terminal.Print(60, 11, "Seeker Value: " + seeker.CombinedMap[Cursor.Y, Cursor.X]);
+            Terminal.Print(60, 12, "Physical Value: " + seeker.PhysicalMap[Cursor.Y, Cursor.X]);*/
 
             Terminal.Refresh();
             Terminal.Clear();
@@ -258,15 +280,29 @@ namespace DungeonRising
             else if(CurrentState == GameState.CameraMoving)
             {
                 if (Camera.X < Entities[CurrentActor].X)
+                {
                     Camera.X++;
+                    if (Camera.X + 12 > World.GetUpperBound(1))
+                        Camera.X = Entities[CurrentActor].X;
+                }
                 else if (Camera.X > Entities[CurrentActor].X)
+                {
                     Camera.X--;
-
+                    if (Camera.X < 12)
+                        Camera.X = Entities[CurrentActor].X;
+                }
                 if (Camera.Y < Entities[CurrentActor].Y)
+                {
                     Camera.Y++;
+                    if (Camera.Y + 12 > World.GetUpperBound(0))
+                        Camera.Y = Entities[CurrentActor].Y;
+                }
                 else if (Camera.Y > Entities[CurrentActor].Y)
+                {
                     Camera.Y--;
-
+                    if (Camera.Y < 12)
+                        Camera.Y = Entities[CurrentActor].Y;
+                }
                 if(Camera.X == Entities[CurrentActor].X && Camera.Y == Entities[CurrentActor].Y)
                 {
                     if (Entities[CurrentActor].Faction == 0)
@@ -318,6 +354,7 @@ namespace DungeonRising
                                     {
                                         Cursor.Y = (Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY;
                                         Cursor.X = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX;
+                                        Cursor.MakeValid(DungeonStart.Height, DungeonStart.Width);
                                         if (Entities[CurrentActor].Seeker.CombinedMap[Cursor.Y, Cursor.X] <= Entities[CurrentActor].MoveSpeed)
                                         {
                                             CurrentState = GameState.Animating;
@@ -328,9 +365,9 @@ namespace DungeonRising
                                     {
                                         Cursor.Y = (Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY;
                                         Cursor.X = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX;
-
                                         if (Cursor.Validate(DungeonStart.Height, DungeonStart.Width))
                                             Entities[CurrentActor].Seeker.GetPath(Cursor.Y, Cursor.X);
+                                        Cursor.MakeValid(DungeonStart.Height, DungeonStart.Width);
                                     }
                                     break;
                                 case Terminal.TK_LEFT:
