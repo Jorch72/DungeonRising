@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace DungeonRising
 {
+    [Serializable]
     public class Dungeon
     {
         public const int FLOOR = 5000, WALL = 9999, DARK = 11111;
@@ -14,9 +15,9 @@ namespace DungeonRising
         public char[,] DLevel { get; set; }
         public char[,] PairLevel { get; set; }
         public int[,] Level { get; set; }
-        public Position entrance;
-        private Dijkstra scanner;
-        private BoneGen bone;
+        public Position Entrance;
+        public Dijkstra Scanner;
+        public BoneGen Bone;
         /*
 0123456789ABCDEF
 ─━│┃┄┅┆┇┈┉┊┋┌┍┎┏ 2500
@@ -31,6 +32,7 @@ namespace DungeonRising
 
         public Dungeon()
         {
+            /*
             do
             {
                 Height = 60;
@@ -39,7 +41,7 @@ namespace DungeonRising
                 DLevel = BoneGen.WallWrap(bone.Generate(TilesetType.DEFAULT_DUNGEON, Height, Width));
                 PairLevel = new char[Height, Width * 2];
                 Level = new int[Height, Width];
-            } while (!PlaceBones());
+            } while (!PlaceBones());*/
         }
         public Dungeon(int height, int width)
         {
@@ -47,8 +49,8 @@ namespace DungeonRising
             {
                 Height = height;
                 Width = width;
-                bone = new BoneGen(XSSR.xsr);
-                DLevel = BoneGen.WallWrap(bone.Generate(TilesetType.DEFAULT_DUNGEON, Height, Width));
+                Bone = new BoneGen(XSSR.xsr);
+                DLevel = BoneGen.WallWrap(Bone.Generate(TilesetType.DEFAULT_DUNGEON, Height, Width));
                 PairLevel = new char[Height, Width * 2];
                 Level = new int[Height, Width];
             } while (!PlaceBones());
@@ -59,8 +61,8 @@ namespace DungeonRising
             {
                 Height = height;
                 Width = width;
-                bone = new BoneGen(XSSR.xsr);
-                DLevel = BoneGen.WallWrap(bone.Generate(tt, Height, Width));
+                Bone = new BoneGen(XSSR.xsr);
+                DLevel = BoneGen.WallWrap(Bone.Generate(tt, Height, Width));
                 PairLevel = new char[Height, Width * 2];
                 Level = new int[Height, Width];
             } while (!PlaceBones());
@@ -128,29 +130,29 @@ namespace DungeonRising
                     }
                 }
             }
-            entrance = Level.RandomMatch(FLOOR);
-            if (entrance.Y < 0) return false;
+            Entrance = Level.RandomMatch(FLOOR);
+            if (Entrance.Y < 0) return false;
 
             Level = Level.Surround(DARK);
             DLevel = DLevel.Surround(' ');
             Height += 2;
             Width += 2;
 
-            scanner = new Dijkstra(Level);
-            scanner.Reset();
-            scanner.SetGoal(entrance.Y + 1, entrance.X + 1);
-            scanner.Scan();
+            Scanner = new Dijkstra(Level);
+            Scanner.Reset();
+            Scanner.SetGoal(Entrance.Y + 1, Entrance.X + 1);
+            Scanner.Scan();
             int floorCount = 0;
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    if (scanner.CombinedMap[y, x] == DARK)
+                    if (Scanner.CombinedMap[y, x] == DARK)
                     {
                         Level[y, x] = DARK;
                         DLevel[y, x] = ' ';
                     }
-                    else if (scanner.CombinedMap[y, x] < FLOOR)
+                    else if (Scanner.CombinedMap[y, x] < FLOOR)
                     {
                         ++floorCount;
                     }

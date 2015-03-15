@@ -19,24 +19,24 @@ namespace DungeonRising
     ///errors, but due to the relatively short period it is acceptable only
     ///for applications with a very mild amount of parallelism; otherwise, use
     ///a xorshift1024* generator. */
-
+    [Serializable]
     public class XSRandom : System.Random
     {
-        private ulong[] s = new ulong[2];
+        public ulong[] State = new ulong[2];
 
         public XSRandom()
         {
-            s[0] = MurmurAvalanche(System.DateTime.UtcNow.Ticks);
-            s[0] = MurmurAvalanche(s[0]);
-            s[1] = MurmurAvalanche(s[0]);
-            s[1] = MurmurAvalanche(s[1]);
+            State[0] = MurmurAvalanche(System.DateTime.UtcNow.Ticks);
+            State[0] = MurmurAvalanche(State[0]);
+            State[1] = MurmurAvalanche(State[0]);
+            State[1] = MurmurAvalanche(State[1]);
         }
         public XSRandom(long seed)
         {
-            s[0] = MurmurAvalanche(seed);
-            s[0] = MurmurAvalanche(s[0]);
-            s[1] = MurmurAvalanche(s[0]);
-            s[1] = MurmurAvalanche(s[1]);
+            State[0] = MurmurAvalanche(seed);
+            State[0] = MurmurAvalanche(State[0]);
+            State[1] = MurmurAvalanche(State[0]);
+            State[1] = MurmurAvalanche(State[1]);
         }
         private static ulong MurmurAvalanche(ulong k)
         {
@@ -61,85 +61,94 @@ namespace DungeonRising
         }
         public ulong NextULong()
         {
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            return (s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0; // b, c
+            return (State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0; // b, c
         }
         public long NextLong()
         {
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            return (long)((s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
+            return (long)((State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
         }
         public uint NextUInt()
         {
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            return (uint)((s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
+            return (uint)((State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
         }
         public int NextInt()
         {
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            return (int)((s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
+            return (int)((State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
         }
         public override int Next(int upperBound)
         {
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            s0 = ((s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
+            s0 = ((State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
             return (int)((uint)(s0) % upperBound);
         }
         public override int Next(int lowerBound, int upperBound)
         {
             if (lowerBound >= upperBound)
                 return upperBound;
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            s0 = ((s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
+            s0 = ((State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0); // b, c
             return (int)((uint)(s0) % (upperBound - lowerBound)) + lowerBound;
         }
         public override double NextDouble()
         {
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            return (double)((s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0) / 0xffffffffffffffffU; // b, c
+            return (double)((State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0) / 0xffffffffffffffffU; // b, c
         }
         public double NextDouble(double outerBound)
         {
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            return (double)((s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0) / 0xffffffffffffffffU * outerBound; // b, c
+            return (double)((State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0) / 0xffffffffffffffffU * outerBound; // b, c
         }
         public double NextDouble(double innerBound, double outerBound)
         {
-            ulong s1 = s[0];
-            ulong s0 = s[1];
-            s[0] = s0;
+            ulong s1 = State[0];
+            ulong s0 = State[1];
+            State[0] = s0;
             s1 ^= s1 << 23; // a
-            return (double)((s[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0) / 0xffffffffffffffffU * (outerBound - innerBound) + innerBound; // b, c
+            return (double)((State[1] = (s1 ^ s0 ^ (s1 >> 17) ^ (s0 >> 26))) + s0) / 0xffffffffffffffffU * (outerBound - innerBound) + innerBound; // b, c
+        }
+
+        public ulong[] GetState()
+        {
+            return new ulong[] { State[0], State[1] };
+        }
+        public void SetState(ulong[] state)
+        {
+            State[0] = state[0];
+            State[1] = state[1];
         }
     }
 
     public static class XSSR
     {
-        private static ulong[] ss = new ulong[2];
         public static XSRandom xsr = new XSRandom();
         public static void Seed(long seed)
         {
@@ -180,6 +189,14 @@ namespace DungeonRising
         public static double NextDouble(double innerBound, double outerBound)
         {
             return xsr.NextDouble(innerBound, outerBound);
+        }
+        public static ulong[] GetState()
+        {
+            return xsr.GetState();
+        }
+        public static void SetState(ulong[] state)
+        {
+            xsr.SetState(state);
         }
     }
 }

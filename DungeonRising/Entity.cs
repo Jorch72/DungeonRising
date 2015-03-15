@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
-
+using Newtonsoft.Json;
 namespace DungeonRising
 {
-
+    [Serializable]
     public class Entity
     {
         public string Name;
@@ -72,29 +72,30 @@ namespace DungeonRising
             this.Faction = 0;
         }
     }
-
+    [Serializable]
+    [JsonObjectAttribute]
     public class EntityDictionary : IEnumerable<Entity>
     {
-        private HashDictionary<string, Entity> byName;
-        private HashDictionary<Position, Entity> byPosition;
+        public Dictionary<string, Entity> byName;
+        public Dictionary<Position, Entity> byPosition;
         public int Count { get { return byName.Count; } }
         public EntityDictionary()
         {
-            byName = new HashDictionary<string, Entity>();
-            byPosition = new HashDictionary<Position, Entity>();
+            byName = new Dictionary<string, Entity>();
+            byPosition = new Dictionary<Position, Entity>();
 
         }
         public bool Contains(string key)
         {
-            return byName.Contains(key);
+            return byName.ContainsKey(key);
         }
         public bool Contains(int y, int x)
         {
-            return byPosition.Contains(new Position(y, x));
+            return byPosition.ContainsKey(new Position(y, x));
         }
         public bool Contains(Position p)
         {
-            return byPosition.Contains(p);
+            return byPosition.ContainsKey(p);
         }
         public void Add(Entity val)
         {
@@ -116,7 +117,7 @@ namespace DungeonRising
 
         public void Move(string key, int yMove, int xMove)
         {
-            if (!byName.Contains(key) || byPosition.Contains(new Position(byName[key].Y + yMove, byName[key].X + xMove)))
+            if (!byName.ContainsKey(key) || byPosition.ContainsKey(new Position(byName[key].Y + yMove, byName[key].X + xMove)))
                 return;
             Entity e = byName[key];
             Position pos = new Position(e.Y, e.X);
@@ -140,7 +141,7 @@ namespace DungeonRising
         }
         public int Step(string key)
         {
-            if (!byName.Contains(key))
+            if (!byName.ContainsKey(key))
                 return 0;
             Entity e = byName[key];
             if (e.Seeker.Path == null || e.Seeker.Path.Count == 0)
@@ -170,7 +171,7 @@ namespace DungeonRising
             get
             {
                 Position p = new Position(y, x);
-                if(byPosition.Contains(p))
+                if(byPosition.ContainsKey(p))
                     return byPosition[p];
                 return null;
             }
@@ -185,7 +186,7 @@ namespace DungeonRising
         {
             get
             {
-                if (byPosition.Contains(p))
+                if (byPosition.ContainsKey(p))
                     return byPosition[p];
                 return null;
             }

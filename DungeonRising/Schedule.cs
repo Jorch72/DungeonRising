@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using C5;
 namespace DungeonRising
 {
+    [Serializable]
     public class Turn : IComparable<Turn>
     {
         public string Actor;
@@ -25,10 +26,10 @@ namespace DungeonRising
         
     }
 
-
+    [Serializable]
     public class Schedule
     {
-        protected SortedArray<Turn> scheduled;
+        public SortedArray<Turn> scheduled;
         public Schedule()
         {
             scheduled = new SortedArray<Turn>(512);

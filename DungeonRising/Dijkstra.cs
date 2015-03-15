@@ -6,28 +6,39 @@ using System.Threading.Tasks;
 using C5;
 namespace DungeonRising
 {
+    [Serializable]
     public class Dijkstra
     {
         public int[,] PhysicalMap, CombinedMap;
         public int Height, Width;
         public ArrayList<int> Path;
-        private int[][] DirShuffled;
+        public int[][] DirShuffled;
         private const int GOAL = 0;
-        private HashDictionary <int, int> goals, open, closed, fresh;
-//        private static XSRandom XSSR;
+        public Dictionary<int, int> goals;
+        private Dictionary<int, int> open, closed, fresh;
+        public static XSRandom Rand;
+        public Dijkstra()
+        {
+            Rand = new XSRandom();
+
+            goals = new Dictionary<int, int>();
+            open = new Dictionary<int, int>();
+            fresh = new Dictionary<int, int>();
+            closed = new Dictionary<int, int>();
+        }
         public Dijkstra(int[,] level)
         {
-//            XSSR = new XSRandom();
+            Rand = new XSRandom();
             CombinedMap = level.Replicate();
             PhysicalMap = level.Replicate();
             Path = new ArrayList<int>();
             
             Height = PhysicalMap.GetLength(0);
             Width = PhysicalMap.GetLength(1);
-            goals = new HashDictionary<int, int>();
-            open = new HashDictionary<int, int>();
-            fresh = new HashDictionary<int, int>();
-            closed = new HashDictionary<int, int>();
+            goals = new Dictionary<int, int>();
+            open = new Dictionary<int, int>();
+            fresh = new Dictionary<int, int>();
+            closed = new Dictionary<int, int>();
 
             DirShuffled = new int[][]
             {
@@ -120,7 +131,7 @@ namespace DungeonRising
                 {
                     for (int d = 0; d < 4; d++)
                     {
-                        if (!closed.Contains(cell.Key + dirs[d]) && !open.Contains(cell.Key + dirs[d]) && CombinedMap.GetIndex(cell.Key, Width) + 1 < CombinedMap.GetIndex(cell.Key + dirs[d], Width))
+                        if (!closed.ContainsKey(cell.Key + dirs[d]) && !open.ContainsKey(cell.Key + dirs[d]) && CombinedMap.GetIndex(cell.Key, Width) + 1 < CombinedMap.GetIndex(cell.Key + dirs[d], Width))
                         {
                             SetFresh(cell.Key + dirs[d], iter);
                             ++numAssigned;
@@ -164,7 +175,7 @@ namespace DungeonRising
                 if(frustration > 1000)
                     return new ArrayList<int>();
                 int best = 9999, choice = 0;
-                int[] dirs = DirShuffled[XSSR.Next(24)];
+                int[] dirs = DirShuffled[Rand.Next(24)];
                 for (int d = 0; d < 4; d++)
                 {
                     if (CombinedMap.GetIndex(currentPos + dirs[d], Width) < best)

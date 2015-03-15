@@ -338,9 +338,17 @@ namespace DungeonRising
             }
             return dupe;
         }
-        public static HashDictionary<K, V> Replicate<K, V>(this HashDictionary<K, V> dict)
+        public static void AddAll<K, V>(this Dictionary<K, V> dict, Dictionary<K, V> items)
         {
-            HashDictionary<K, V> d = new HashDictionary<K, V>();
+            foreach(var kv in items)
+            {
+                dict.Add(kv.Key, kv.Value);
+            }
+
+        }
+        public static Dictionary<K, V> Replicate<K, V>(this Dictionary<K, V> dict)
+        {
+            Dictionary<K, V> d = new Dictionary<K, V>();
             d.AddAll(dict);
             return d;
         }
