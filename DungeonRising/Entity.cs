@@ -141,8 +141,8 @@ namespace DungeonRising
             Entity e = byName[key];
             if (e.Seeker.Path == null || e.Seeker.Path.Count == 0)
                 return e.Seeker.Path.Count;
-            int nxt = e.Seeker.Path.Pop();
-            Move(key, (nxt / e.Seeker.Width) - e.Pos.Y, (nxt % e.Seeker.Width) - e.Pos.X);
+            Position nxt = e.Seeker.Path.Pop();
+            Move(key, nxt.Y - e.Pos.Y, nxt.X - e.Pos.X);
             return e.Seeker.Path.Count;
         }
 

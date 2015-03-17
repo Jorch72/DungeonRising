@@ -11,8 +11,68 @@ namespace DungeonRising
     {
         public int[,] PhysicalMap, CombinedMap;
         public int Height, Width;
-        public ArrayList<int> Path;
-        public int[][] DirShuffled;
+        public ArrayList<Position> Path;
+        public static int[][] DirShuffledY = new int[][]
+            {
+                new int[]{ -1, 0, 1, 0},
+                new int[]{ -1, 0, 0, 1},
+                new int[]{ -1, 1, 0, 0},
+                new int[]{ -1, 0, 0, 1},
+                new int[]{ -1, 1, 0, 0},
+                new int[]{ -1, 0, 1, 0},
+                
+                new int[]{ 1, 0, -1, 0},
+                new int[]{ 1, 0, 0, -1},
+                new int[]{ 1, -1, 0, 0},
+                new int[]{ 1, 0, 0, -1},
+                new int[]{ 1, -1, 0, 0},
+                new int[]{ 1, 0, -1, 0},
+                
+                new int[]{ 0, 1, -1, 0},
+                new int[]{ 0, 1, 0, -1},
+                new int[]{ 0, -1, 1, 0},
+                new int[]{ 0, 0, 1, -1},
+                new int[]{ 0, -1, 0, 1},
+                new int[]{ 0, 0, -1, 1},
+                
+                new int[]{ 0, 1, -1, 0},
+                new int[]{ 0, 1, 0, -1},
+                new int[]{ 0, -1, 1, 0},
+                new int[]{ 0, 0, 1, -1},
+                new int[]{ 0, -1, 0, 1},
+                new int[]{ 0, 0, -1, 1},
+                
+            }, DirShuffledX = new int[][]
+            {
+                new int[]{ 0, 1, 0, -1},
+                new int[]{ 0, 1, -1, 0},
+                new int[]{ 0, 0, 1, -1},
+                new int[]{ 0, -1, 1, 0},
+                new int[]{ 0, 0, -1, 1},
+                new int[]{ 0, -1, 0, 1},
+                
+                new int[]{ 0, 1, 0, -1},
+                new int[]{ 0, 1, -1, 0},
+                new int[]{ 0, 0, 1, -1},
+                new int[]{ 0, -1, 1, 0},
+                new int[]{ 0, 0, -1, 1},
+                new int[]{ 0, -1, 0, 1},
+                
+                new int[]{ 1, 0, 0, -1},
+                new int[]{ 1, 0, -1, 0},
+                new int[]{ 1, 0, 0, -1},
+                new int[]{ 1, -1, 0, 0},
+                new int[]{ 1, 0, -1, 0},
+                new int[]{ 1, -1, 0, 0},
+                
+                new int[]{ -1, 0, 0, 1},
+                new int[]{ -1, 0, 1, 0},
+                new int[]{ -1, 0, 0, 1},
+                new int[]{ -1, 1, 0, 0},
+                new int[]{ -1, 0, 1, 0},
+                new int[]{ -1, 1, 0, 0},
+                
+            };
         private const int GOAL = 0;
         public Dictionary<int, int> goals;
         private Dictionary<int, int> open, closed, fresh;
@@ -31,7 +91,7 @@ namespace DungeonRising
             Rand = new XSRandom();
             CombinedMap = level.Replicate();
             PhysicalMap = level.Replicate();
-            Path = new ArrayList<int>();
+            Path = new ArrayList<Position>();
             
             Height = PhysicalMap.GetLength(0);
             Width = PhysicalMap.GetLength(1);
@@ -40,37 +100,6 @@ namespace DungeonRising
             fresh = new Dictionary<int, int>();
             closed = new Dictionary<int, int>();
 
-            DirShuffled = new int[][]
-            {
-                new int[]{ -Width, 1, Width, -1},
-                new int[]{ -Width, 1, -1, Width},
-                new int[]{ -Width, Width, 1, -1},
-                new int[]{ -Width, -1, 1, Width},
-                new int[]{ -Width, Width, -1, 1},
-                new int[]{ -Width, -1, Width, 1},
-                
-                new int[]{ Width, 1, -Width, -1},
-                new int[]{ Width, 1, -1, -Width},
-                new int[]{ Width, -Width, 1, -1},
-                new int[]{ Width, -1, 1, -Width},
-                new int[]{ Width, -Width, -1, 1},
-                new int[]{ Width, -1, -Width, 1},
-                
-                new int[]{ 1, Width, -Width, -1},
-                new int[]{ 1, Width, -1, -Width},
-                new int[]{ 1, -Width, Width, -1},
-                new int[]{ 1, -1, Width, -Width},
-                new int[]{ 1, -Width, -1, Width},
-                new int[]{ 1, -1, -Width, Width},
-                
-                new int[]{ -1, Width, -Width, 1},
-                new int[]{ -1, Width, 1, -Width},
-                new int[]{ -1, -Width, Width, 1},
-                new int[]{ -1, 1, Width, -Width},
-                new int[]{ -1, -Width, 1, Width},
-                new int[]{ -1, 1, -Width, Width},
-                
-            };
         }
         public void Reset()
         {
@@ -160,31 +189,32 @@ namespace DungeonRising
             return CombinedMap;
         }
 
-        public ArrayList<int> GetPath(int startY, int startX)
+        public ArrayList<Position> GetPath(int startY, int startX)
         {
-            Path = new ArrayList<int>();
+            Path = new ArrayList<Position>();
             int frustration = 0;
             if (CombinedMap[startY, startX] > Dungeon.FLOOR)
             {
                 return Path;
             }
-            int currentPos = startY * Width + startX;
+            Position currentPos = new Position(startY, startX);
             Path.Add(currentPos);
-            while (CombinedMap.GetIndex(currentPos, Width) > 0)
+            while (CombinedMap[currentPos.Y, currentPos.X] > 0)
             {
                 if(frustration > 1000)
-                    return new ArrayList<int>();
-                int best = 9999, choice = 0;
-                int[] dirs = DirShuffled[Rand.Next(24)];
+                    return new ArrayList<Position>();
+                int best = 9999, choice = 0, whichOrder = Rand.Next(24);
+                int[] dirsY = DirShuffledY[whichOrder], dirsX = DirShuffledX[whichOrder];
                 for (int d = 0; d < 4; d++)
                 {
-                    if (CombinedMap.GetIndex(currentPos + dirs[d], Width) < best)
+                    if (CombinedMap[currentPos.Y + dirsY[d], currentPos.X + dirsX[d]] < best)
                     {
-                        best = CombinedMap.GetIndex(currentPos + dirs[d], Width);
+                        best = CombinedMap[currentPos.Y + dirsY[d], currentPos.X + dirsX[d]];
                         choice = d;
                     }
                 }
-                currentPos += dirs[choice];
+                currentPos.Y += dirsY[choice];
+                currentPos.X += dirsX[choice];
                 Path.Add(currentPos);
                 frustration++;
             }

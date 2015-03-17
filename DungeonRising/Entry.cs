@@ -218,7 +218,7 @@ namespace DungeonRising
                         Terminal.Put(sx * 2 + 2, sy + 1, '!');
                         Terminal.Color(DarkGray);
                     }
-                    else if (S.Entities[S.CurrentActor].Faction == 0 && seeker.Path.Contains(y * seeker.Width + x))
+                    else if (S.Entities[S.CurrentActor].Faction == 0 && seeker.Path.Contains(p))
                     {
                         Terminal.Color(playerColors[currentPlayerColor]);
                         Terminal.Put(sx * 2 + 1, sy + 1, S.DungeonStart.PairedWorld[y, x * 2]);
