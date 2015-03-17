@@ -16,8 +16,6 @@ namespace DungeonRising
         public char[,] PairedWorld { get; set; }
         public int[,] LogicWorld { get; set; }
         public Position Entrance;
-        public Dijkstra Scanner;
-        public BoneGen Bone;
         /*
 0123456789ABCDEF
 ─━│┃┄┅┆┇┈┉┊┋┌┍┎┏ 2500
@@ -49,7 +47,7 @@ namespace DungeonRising
             {
                 Height = height;
                 Width = width;
-                Bone = new BoneGen(XSSR.xsr);
+                BoneGen Bone = new BoneGen(XSSR.xsr);
                 World = BoneGen.WallWrap(Bone.Generate(TilesetType.DEFAULT_DUNGEON, Height, Width));
                 PairedWorld = new char[Height, Width * 2];
                 LogicWorld = new int[Height, Width];
@@ -61,7 +59,7 @@ namespace DungeonRising
             {
                 Height = height;
                 Width = width;
-                Bone = new BoneGen(XSSR.xsr);
+                BoneGen Bone = new BoneGen(XSSR.xsr);
                 World = BoneGen.WallWrap(Bone.Generate(tt, Height, Width));
                 PairedWorld = new char[Height, Width * 2];
                 LogicWorld = new int[Height, Width];
@@ -138,7 +136,7 @@ namespace DungeonRising
             Height += 2;
             Width += 2;
 
-            Scanner = new Dijkstra(LogicWorld);
+            Dijkstra Scanner = new Dijkstra(LogicWorld);
             Scanner.Reset();
             Scanner.SetGoal(Entrance.Y + 1, Entrance.X + 1);
             Scanner.Scan();
@@ -414,5 +412,16 @@ namespace DungeonRising
             return true;
         }
 
+        public Dungeon Replicate()
+        {
+            Dungeon d = new Dungeon();
+            d.World = World.Replicate();
+            d.PairedWorld = PairedWorld.Replicate();
+            d.LogicWorld = LogicWorld.Replicate();
+            d.Entrance = new Position(Entrance.Y, Entrance.X);
+            d.Height = Height;
+            d.Width = Width;
+            return d;
+        }
     }
 }

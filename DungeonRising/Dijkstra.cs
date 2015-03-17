@@ -9,8 +9,10 @@ namespace DungeonRising
     [Serializable]
     public class Dijkstra
     {
-        public int[,] PhysicalMap, CombinedMap;
-        public int Height, Width;
+        public static int[,] PhysicalMap;
+        [NonSerialized]
+        public int[,] CombinedMap;
+        public static int Height, Width;
         public ArrayList<Position> Path;
         public static int[][] DirShuffledY = new int[][]
             {
@@ -74,17 +76,18 @@ namespace DungeonRising
                 
             };
         private const int GOAL = 0;
-        public Dictionary<int, int> goals;
-        private Dictionary<int, int> open, closed, fresh;
+        public HashDictionary<int, int> goals;
+        private HashDictionary<int, int> open, closed, fresh;
         public static XSRandom Rand;
         public Dijkstra()
         {
             Rand = new XSRandom();
+            Path = new ArrayList<Position>();
 
-            goals = new Dictionary<int, int>();
-            open = new Dictionary<int, int>();
-            fresh = new Dictionary<int, int>();
-            closed = new Dictionary<int, int>();
+            goals = new HashDictionary<int, int>();
+            open = new HashDictionary<int, int>();
+            fresh = new HashDictionary<int, int>();
+            closed = new HashDictionary<int, int>();
         }
         public Dijkstra(int[,] level)
         {
@@ -95,10 +98,10 @@ namespace DungeonRising
             
             Height = PhysicalMap.GetLength(0);
             Width = PhysicalMap.GetLength(1);
-            goals = new Dictionary<int, int>();
-            open = new Dictionary<int, int>();
-            fresh = new Dictionary<int, int>();
-            closed = new Dictionary<int, int>();
+            goals = new HashDictionary<int, int>();
+            open = new HashDictionary<int, int>();
+            fresh = new HashDictionary<int, int>();
+            closed = new HashDictionary<int, int>();
 
         }
         public void Reset()
@@ -114,7 +117,8 @@ namespace DungeonRising
                 return;
             }
             CombinedMap[y, x] = GOAL;
-            goals.Add(y * Width + x, GOAL);
+            if(!goals.Contains(y * Width + x))
+                goals.Add(y * Width + x, GOAL);
         }
         public void SetOccupied(int y, int x)
         {

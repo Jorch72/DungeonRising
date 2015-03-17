@@ -353,5 +353,17 @@ namespace DungeonRising
             return d;
         }
 
+        public static HashDictionary<K, V> Replicate<K, V>(this HashDictionary<K, V> dict)
+        {
+            HashDictionary<K, V> d = new HashDictionary<K, V>();
+            d.AddAll(dict);
+            return d;
+        }
+
+        public static bool ContainsKey<K, V>(this HashDictionary<K, V> dict, K key)
+        {
+            return dict.Contains(key);
+        }
+
     }
 }

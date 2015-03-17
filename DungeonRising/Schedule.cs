@@ -24,7 +24,10 @@ namespace DungeonRising
         {
             return (this.Delay - other.Delay < 0.0) ? -1 : (this.Delay - other.Delay > 0.0) ? 1 : (this.Actor.CompareTo(other.Actor));
         }
-        
+        public Turn Replicate()
+        {
+            return new Turn(Actor, Delay);
+        }
     }
 
     [Serializable]
@@ -35,9 +38,21 @@ namespace DungeonRising
         {
             scheduled = new SortedArray<Turn>(512);
         }
+        public Schedule(SortedArray<Turn> existing)
+        {
+            scheduled = new SortedArray<Turn>(existing.Count);
+            foreach(Turn t in existing)
+            {
+                scheduled.Add(t.Replicate());
+            }
+        }
         public void AddTurn(string actor, double delay)
         {
             scheduled.Add(new Turn(actor, delay));
+        }
+        public void AddTurn(Turn turn)
+        {
+            scheduled.Add(turn);
         }
         public void RemoveTurn(Turn turn)
         {

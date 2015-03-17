@@ -9,19 +9,39 @@ using Newtonsoft.Json;
 namespace DungeonRising
 {
     [Serializable]
-    public class Entity
+    public class Entity : IEquatable<Entity>
     {
         public string Name;
         public Position Pos;
-        public char Left, Right;
+        public char Left;
+        public char Right;
         public Color Coloring;
-        public int MoveSpeed, ActSpeed, Faction;
+        public int MoveSpeed;
+        public int ActSpeed;
+        public int Faction;
         public double Delay { get { return 36.0 / ActSpeed; } }
-        public Dijkstra Seeker;
+        private Dijkstra _Seeker = null;
+        public Dijkstra Seeker
+        {
+            get
+            {
+                if (_Seeker == null)
+                {
+                    _Seeker = new Dijkstra(Chariot.S.DungeonStart.LogicWorld);
+                    _Seeker.SetGoal(Pos.Y, Pos.X);
+                    _Seeker.Scan();
+                } return _Seeker;
+            }
+            set
+            {
+                _Seeker = value;
+            }
+        }
         public bool Equivalent(Entity other)
         {
-            return other != null && Pos == other.Pos && Left == other.Left && Right == other.Right;
+            return other != null && Pos == other.Pos && Name == other.Name;
         }
+
         public Entity(string representation, int y, int x)
         {
             Name = "";
@@ -66,19 +86,57 @@ namespace DungeonRising
             this.ActSpeed = 1;
             this.Faction = 0;
         }
+
+
+        public override bool Equals(Object obj)
+        {
+            if (obj == null || !(obj is Entity))
+                return false;
+            else
+                return Pos == ((Entity)obj).Pos && Name == ((Entity)obj).Name &&
+                    MoveSpeed == ((Entity)obj).MoveSpeed && ActSpeed == ((Entity)obj).ActSpeed;
+        }
+        public bool Equals(Entity obj)
+        {
+            if (obj == null)
+                return false;
+            else
+                return Pos == obj.Pos && Name == obj.Name &&
+                    MoveSpeed == obj.MoveSpeed && ActSpeed == obj.ActSpeed;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode() ^ Pos.GetHashCode();
+        }
+
+        public Entity Replicate()
+        {
+            return new Entity(Name, "" + Left + Right, Coloring, Pos.Y, Pos.X, MoveSpeed, ActSpeed, Faction);
+        }
     }
     [Serializable]
     [JsonObjectAttribute]
     public class EntityDictionary : IEnumerable<Entity>
     {
-        public Dictionary<string, Entity> byName;
-        public Dictionary<Position, Entity> byPosition;
+        public HashDictionary<string, Entity> byName;
+        public HashDictionary<Position, Entity> byPosition;
         public int Count { get { return byName.Count; } }
         public EntityDictionary()
         {
-            byName = new Dictionary<string, Entity>();
-            byPosition = new Dictionary<Position, Entity>();
+            byName = new HashDictionary<string, Entity>();
+            byPosition = new HashDictionary<Position, Entity>();
 
+        }
+        public bool Contains(Entity key)
+        {
+            if (key == null) return false;
+            return byName.ContainsKey(key.Name);
+        }
+        public bool ContainsExactly(Entity key)
+        {
+            if (key == null) return false;
+            return byName.ContainsKey(key.Name) && byName[key.Name].Equals(key);
         }
         public bool Contains(string key)
         {
@@ -103,11 +161,39 @@ namespace DungeonRising
             byPosition.Add(val.Pos, val);
             byName.Add(key, val);
         }
+        public void AddAll(IEnumerable<Entity> vals)
+        {
+            foreach (var val in vals)
+            {
+                Add(val);
+            }
+        }
+        public void UpdateAll(IEnumerable<Entity> vals)
+        {
+            foreach (var val in vals)
+            {
+                if(Contains(val))
+                {
+                    byName[val.Name] = val;
+                    byPosition[val.Pos] = val;
+                }
+                else
+                {
+                    Add(val);
+                }
+            }
+        }
         public void Remove(string key)
         {
             Entity e = byName[key];
             byPosition.Remove(e.Pos);
             byName.Remove(key);
+        }
+        public void Remove(Position key)
+        {
+            Entity e = byPosition[key];
+            byName.Remove(e.Name);
+            byPosition.Remove(key);
         }
 
         public void Move(string key, int yMove, int xMove)
@@ -134,6 +220,29 @@ namespace DungeonRising
             }
             //Seeker.GetPath(Y, X);
         }
+        public void MoveDirectly(string key, Position dest)
+        {
+            if (!byName.ContainsKey(key) || byPosition.ContainsKey(dest))
+                return;
+            Entity e = byName[key];
+            Position pos = e.Pos;
+            byPosition.Remove(pos);
+            byName.Remove(key);
+            e.Pos = dest;
+            Add(key, e);
+            /*foreach(var kv in byName)
+            {
+                kv.Value.Seeker.ResetCell(pos.Y, pos.X);
+                //kv.Value.Seeker.SetOccupied(e.Y, e.X);
+            }*/
+            e.Seeker.SetGoal(dest.Y, dest.X);
+
+            foreach (var kv in byName)
+            {
+                kv.Value.Seeker.Scan();
+            }
+            //Seeker.GetPath(Y, X);
+        }
         public int Step(string key)
         {
             if (!byName.ContainsKey(key))
@@ -142,7 +251,7 @@ namespace DungeonRising
             if (e.Seeker.Path == null || e.Seeker.Path.Count == 0)
                 return e.Seeker.Path.Count;
             Position nxt = e.Seeker.Path.Pop();
-            Move(key, nxt.Y - e.Pos.Y, nxt.X - e.Pos.X);
+            MoveDirectly(key, nxt);
             return e.Seeker.Path.Count;
         }
 
@@ -211,6 +320,15 @@ namespace DungeonRising
             ArrayList<Entity> ents = new ArrayList<Entity>();
             ents.AddAll(this.byName.Values);
             return ents;
+        }
+        public EntityDictionary Replicate()
+        {
+            EntityDictionary ed = new EntityDictionary();
+            foreach(Entity e in byName.Values)
+            {
+                ed.Add(e.Replicate());
+            }
+            return ed;
         }
     }
 
