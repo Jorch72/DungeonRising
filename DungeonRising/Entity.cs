@@ -12,8 +12,7 @@ namespace DungeonRising
     public class Entity
     {
         public string Name;
-        public int X;
-        public int Y;
+        public Position Pos;
         public char Left, Right;
         public Color Coloring;
         public int MoveSpeed, ActSpeed, Faction;
@@ -21,7 +20,7 @@ namespace DungeonRising
         public Dijkstra Seeker;
         public bool Equivalent(Entity other)
         {
-            return other != null && X == other.X && Y == other.Y && Left == other.Left && Right == other.Right;
+            return other != null && Pos == other.Pos && Left == other.Left && Right == other.Right;
         }
         public Entity(string representation, int y, int x)
         {
@@ -29,8 +28,7 @@ namespace DungeonRising
             Left = representation[0];
             Right = representation[1];
             Coloring = Color.DimGray;
-            X = x;
-            Y = y;
+            Pos = new Position(y, x);
             MoveSpeed = 5;
             ActSpeed = 1;
             Faction = 0;
@@ -41,8 +39,7 @@ namespace DungeonRising
             Left = representation[0];
             Right = representation[1];
             Coloring = coloring;
-            X = x;
-            Y = y;
+            Pos = new Position(y, x); 
             MoveSpeed = moveSpeed;
             ActSpeed = actSpeed;
             Faction = faction;
@@ -53,8 +50,7 @@ namespace DungeonRising
             Left = representation[0];
             Right = representation[1];
             Coloring = Color.DimGray;
-            X = x;
-            Y = y;
+            Pos = new Position(y, x);
             MoveSpeed = 5;
             ActSpeed = 1;
             Faction = 0;
@@ -65,8 +61,7 @@ namespace DungeonRising
             this.Left = '.';
             this.Right = ' ';
             Coloring = Color.DimGray;
-            this.X = 0;
-            this.Y = 0;
+            Pos = new Position(0, 0);
             this.MoveSpeed = 0;
             this.ActSpeed = 1;
             this.Faction = 0;
@@ -99,39 +94,39 @@ namespace DungeonRising
         }
         public void Add(Entity val)
         {
-            byPosition.Add(new Position(val.Y, val.X), val);
+            byPosition.Add(val.Pos, val);
             byName.Add(val.Name, val);
         }
         public void Add(string key, Entity val)
         {
             val.Name = key;
-            byPosition.Add(new Position(val.Y, val.X), val);
+            byPosition.Add(val.Pos, val);
             byName.Add(key, val);
         }
         public void Remove(string key)
         {
             Entity e = byName[key];
-            byPosition.Remove(new Position(e.Y, e.X));
+            byPosition.Remove(e.Pos);
             byName.Remove(key);
         }
 
         public void Move(string key, int yMove, int xMove)
         {
-            if (!byName.ContainsKey(key) || byPosition.ContainsKey(new Position(byName[key].Y + yMove, byName[key].X + xMove)))
+            if (!byName.ContainsKey(key) || byPosition.ContainsKey(new Position(byName[key].Pos.Y + yMove, byName[key].Pos.X + xMove)))
                 return;
             Entity e = byName[key];
-            Position pos = new Position(e.Y, e.X);
+            Position pos = e.Pos;
             byPosition.Remove(pos);
             byName.Remove(key);
-            e.Y += yMove;
-            e.X += xMove;
+            e.Pos.Y += yMove;
+            e.Pos.X += xMove;
             Add(key, e);
             /*foreach(var kv in byName)
             {
                 kv.Value.Seeker.ResetCell(pos.Y, pos.X);
                 //kv.Value.Seeker.SetOccupied(e.Y, e.X);
             }*/
-            e.Seeker.SetGoal(e.Y, e.X);
+            e.Seeker.SetGoal(e.Pos.Y, e.Pos.X);
 
             foreach (var kv in byName)
             {
@@ -147,7 +142,7 @@ namespace DungeonRising
             if (e.Seeker.Path == null || e.Seeker.Path.Count == 0)
                 return e.Seeker.Path.Count;
             int nxt = e.Seeker.Path.Pop();
-            Move(key, (nxt / e.Seeker.Width) - e.Y, (nxt % e.Seeker.Width) - e.X);
+            Move(key, (nxt / e.Seeker.Width) - e.Pos.Y, (nxt % e.Seeker.Width) - e.Pos.X);
             return e.Seeker.Path.Count;
         }
 
@@ -163,7 +158,7 @@ namespace DungeonRising
                 Entity v = value;
                 v.Name = key;
                 byName[key] = v;
-                byPosition[new Position(v.Y, v.X)] = v;
+                byPosition[v.Pos] = v;
             }
         }
         public Entity this[int y, int x]
@@ -178,7 +173,9 @@ namespace DungeonRising
             set
             {
                 if (value.Name == "") throw new ArgumentException("Entity.Name must not be empty.");
-                byPosition[new Position(value.Y, value.X)] = value;
+                value.Pos.Y = y;
+                value.Pos.X = x;
+                byPosition[value.Pos] = value;
                 byName[value.Name] = value;
             }
         }

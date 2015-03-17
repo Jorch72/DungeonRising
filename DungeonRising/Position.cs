@@ -50,6 +50,19 @@ namespace DungeonRising
         {
             return (Y << 16) | (X & 0xffff);
         }
+
+
+        public static bool operator ==(Position a, Position b)
+        {
+            return a.X == b.X && a.Y == b.Y;
+        }
+
+        // Inequality operator. Returns dbNull if either operand is
+        // dbNull, otherwise returns dbTrue or dbFalse:
+        public static bool operator !=(Position a, Position b)
+        {
+            return a.X != b.X || a.Y != b.Y;
+        }
     }
 
     public class PositionConverter : System.ComponentModel.TypeConverter

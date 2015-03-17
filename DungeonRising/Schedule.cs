@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using C5;
 namespace DungeonRising
 {
@@ -36,18 +37,34 @@ namespace DungeonRising
         }
         public void AddTurn(string actor, double delay)
         {
-            scheduled.Add(new Turn(actor, delay));   
+            scheduled.Add(new Turn(actor, delay));
+        }
+        public void RemoveTurn(Turn turn)
+        {
+            if(scheduled.Contains(turn))
+            {
+                scheduled.Remove(turn);
+            }
         }
         public Turn NextTurn()
         {
             Turn nxt = scheduled.DeleteMin();
-            
+
             foreach (Turn t in scheduled)
             {
                 t.Delay -= nxt.Delay;
             }
-
             return nxt;
+        }
+        public Turn PreviousTurn(Turn undo)
+        {
+            Turn prev = scheduled.FindMin();
+            foreach (Turn t in scheduled)
+            {
+                t.Delay += undo.Delay;
+            }
+            scheduled.Add(undo);
+            return prev;
         }
         public Turn PeekTurn()
         {
@@ -62,6 +79,10 @@ namespace DungeonRising
                     scheduled.Remove(t);
                 }
             }
+        }
+        public void ReverseCancelTurn(IEnumerable<Turn> turns)
+        {
+            scheduled.AddAll(turns);
         }
     }
 }
