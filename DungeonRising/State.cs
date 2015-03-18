@@ -4,22 +4,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using C5;
+using PropertyChanged;
 
 namespace DungeonRising
 {
     [Serializable]
+    [ImplementPropertyChanged]
     public class State
     {
-        public Dungeon DungeonStart;
-        public EntityDictionary Entities;
-        public string CurrentActor;
-        public int StepsLeft = 0;
-        public int StepsTaken = 0;
-        public Position Cursor;
-        public Position Camera;
-        public WaitReason CurrentReason;
-        public Schedule Initiative;
-        public long TurnsLeft;
+        public Dungeon DungeonStart { get; set; }
+        public EntityDictionary Entities { get; set; }
+        public string CurrentActor { get; set; }
+        public int StepsLeft { get; set; }
+        public int StepsTaken { get; set; }
+        public Position Cursor { get; set; }
+        public Position Camera { get; set; }
+        public WaitReason CurrentReason { get; set; }
+        public Schedule Initiative { get; set; }
+        public long TurnsLeft { get; set; }
         public ulong[] XSSRState;
         public State()
         {
@@ -594,12 +596,12 @@ namespace DungeonRising
         }
         public static void Backward()
         {
-            if (DiffIndex <= 1)
+            if (DiffIndex < 1)
                 return;
             Diff df = Diffs[DiffIndex];
             S = df.Backward(S);
 
-            if (DiffIndex >= 2)
+            if (DiffIndex >= 1)
             {
                 Diff df2 = Diffs[DiffIndex - 1];
                 Prior = df2.Backward(Prior);
@@ -617,7 +619,7 @@ namespace DungeonRising
             Diff df = Diffs[DiffIndex];
             S = df.Forward(S);
 
-            if (DiffIndex >= 2)
+            if (DiffIndex >= 1)
             {
                 Diff df2 = Diffs[DiffIndex - 1];
                 Prior = df2.Forward(Prior);

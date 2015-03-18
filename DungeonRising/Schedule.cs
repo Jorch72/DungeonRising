@@ -3,13 +3,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using C5;
+using PropertyChanged;
 namespace DungeonRising
 {
     [Serializable]
+    [ImplementPropertyChanged]
     public class Turn : IComparable<Turn>
     {
-        public string Actor;
-        public double Delay;
+        public string Actor { get; set; }
+        public double Delay { get; set; }
         public Turn()
         {
             Actor = "";
@@ -31,9 +33,10 @@ namespace DungeonRising
     }
 
     [Serializable]
+    [ImplementPropertyChanged]
     public class Schedule
     {
-        public SortedArray<Turn> scheduled;
+        public SortedArray<Turn> scheduled { get; set; }
         public Schedule()
         {
             scheduled = new SortedArray<Turn>(512);

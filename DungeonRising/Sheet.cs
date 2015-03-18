@@ -1,20 +1,21 @@
-﻿using System;
+﻿using PropertyChanged;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 namespace DungeonRising
 {
+    [ImplementPropertyChanged]
     /// <summary>
     /// Character Sheet of statistics and stuff.
     /// </summary>
     public class Sheet
     {
-        public Gauge Health;
-        public int Damage;
-        public int MoveSpeed;
-        public int ActSpeed;
+        public Gauge Health { get; set; }
+        public int Damage { get; set; }
+        public int MoveSpeed { get; set; }
+        public int ActSpeed { get; set; }
         public event EventHandler Killed;
         public Sheet()
         {

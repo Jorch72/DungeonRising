@@ -89,6 +89,7 @@ namespace DungeonRising
                     S.Entities.Add(baddie);
                 }
             }
+            S.StepsTaken = 0;
             S.XSSRState = XSSR.GetState();
             Chariot.S = S;
 
@@ -281,27 +282,27 @@ namespace DungeonRising
             {
                 if (Chariot.S.Camera.X < Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X)
                 {
-                    Chariot.S.Camera.X++;
+                    Chariot.S.Camera = Chariot.S.Camera.Move(0, 1);
                     if (Chariot.S.Camera.X + 12 > Chariot.S.DungeonStart.World.GetUpperBound(1))
-                        Chariot.S.Camera.X = Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X;
+                        Chariot.S.Camera = Chariot.S.Camera.SetX(Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X);
                 }
                 else if (Chariot.S.Camera.X > Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X)
                 {
-                    Chariot.S.Camera.X--;
+                    Chariot.S.Camera = Chariot.S.Camera.Move(0, -1);
                     if (Chariot.S.Camera.X < 12)
-                        Chariot.S.Camera.X = Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X;
+                        Chariot.S.Camera = Chariot.S.Camera.SetX(Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X);
                 }
                 if (Chariot.S.Camera.Y < Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y)
                 {
-                    Chariot.S.Camera.Y++;
+                    Chariot.S.Camera = Chariot.S.Camera.Move(1, 0);
                     if (Chariot.S.Camera.Y + 12 > Chariot.S.DungeonStart.World.GetUpperBound(0))
-                        Chariot.S.Camera.Y = Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y;
+                        Chariot.S.Camera = Chariot.S.Camera.SetY(Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y);
                 }
                 else if (Chariot.S.Camera.Y > Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y)
                 {
-                    Chariot.S.Camera.Y--;
+                    Chariot.S.Camera = Chariot.S.Camera.Move(-1, 0);
                     if (Chariot.S.Camera.Y < 12)
-                        Chariot.S.Camera.Y = Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y;
+                        Chariot.S.Camera = Chariot.S.Camera.SetY(Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y);
                 }
                 if (Chariot.S.Camera.X == Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X && Chariot.S.Camera.Y == Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y)
                 {
@@ -375,8 +376,8 @@ namespace DungeonRising
                             {
                                 case Terminal.TK_MOUSE_LEFT:
                                     {
-                                        Chariot.S.Cursor.Y = (Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY;
-                                        Chariot.S.Cursor.X = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX;
+                                        Position temp = new Position((Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY, (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX);
+                                        Chariot.S.Cursor = temp;
                                         Chariot.S.Cursor.MakeValid(Chariot.S.DungeonStart.Height, Chariot.S.DungeonStart.Width);
                                         if (Chariot.S.Entities[Chariot.S.CurrentActor].Seeker.CombinedMap[Chariot.S.Cursor.Y, Chariot.S.Cursor.X] <= Chariot.S.Entities[Chariot.S.CurrentActor].Stats.MoveSpeed)
                                         {
@@ -386,8 +387,8 @@ namespace DungeonRising
                                     break;
                                 case Terminal.TK_MOUSE_MOVE:
                                     {
-                                        Chariot.S.Cursor.Y = (Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY;
-                                        Chariot.S.Cursor.X = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX;
+                                        Position temp = new Position((Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY, (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX);
+                                        Chariot.S.Cursor = temp;
                                         if (Chariot.S.Cursor.Validate(Chariot.S.DungeonStart.Height, Chariot.S.DungeonStart.Width))
                                             Chariot.S.Entities[Chariot.S.CurrentActor].Seeker.GetPath(Chariot.S.Cursor.Y, Chariot.S.Cursor.X);
                                         Chariot.S.Cursor.MakeValid(Chariot.S.DungeonStart.Height, Chariot.S.DungeonStart.Width);

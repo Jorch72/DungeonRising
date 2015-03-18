@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PropertyChanged;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +8,12 @@ using System.Threading.Tasks;
 namespace DungeonRising
 {
     [Serializable]
-    [System.ComponentModel.TypeConverter(typeof(PositionConverter))]
     public struct Position
     {
         public int X;
         public int Y;
         
-        public Position(int y, int x)
+        public Position(int y, int x) : this()
         {
             X = x;
             Y = y;
@@ -32,6 +32,23 @@ namespace DungeonRising
                 X = 0;
             if (X >= Width)
                 X = Width - 1;
+        }
+        public Position Move(int y, int x)
+        {
+            return new Position(Y + y, X + x);
+        }
+        public Position SetAll(int y, int x)
+        {
+
+            return new Position(y, x);
+        }
+        public Position SetX(int x)
+        {
+            return new Position(Y, x);
+        }
+        public Position SetY(int y)
+        {
+            return new Position(y, X);
         }
         public static Position FromIndex(int index, int Width)
         {
@@ -65,31 +82,4 @@ namespace DungeonRising
         }
     }
 
-    public class PositionConverter : System.ComponentModel.TypeConverter
-    {
-        public override bool CanConvertFrom(System.ComponentModel.ITypeDescriptorContext context, Type sourceType)
-        {
-            if (sourceType.Equals(typeof(string)))
-                return true;
-            return false;
-        }
-        public override bool CanConvertTo(System.ComponentModel.ITypeDescriptorContext context, Type destinationType)
-        {
-            if (destinationType.Equals(typeof(string)))
-                return true;
-            return false;
-        }
-        public override object ConvertFrom(System.ComponentModel.ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
-        {
-            Position pos = new Position();
-            string[] xy = ((string)value).Split(' ');
-            pos.X = int.Parse(xy[0]);
-            pos.Y = int.Parse(xy[1]);
-            return pos;
-        }
-        public override object ConvertTo(System.ComponentModel.ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
-        {
-            return ((Position)value).X + " " + ((Position)value).Y;
-        }
-    }
 }

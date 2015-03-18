@@ -6,18 +6,21 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using Newtonsoft.Json;
+using PropertyChanged;
+using System.ComponentModel;
 namespace DungeonRising
 {
     [Serializable]
+    [ImplementPropertyChanged]
     public class Entity : IEquatable<Entity>
     {
-        public Sheet Stats;
-        public string Name;
-        public Position Pos;
-        public char Left;
-        public char Right;
-        public Color Coloring;
-        public int Faction;
+        public Sheet Stats { get; set; }
+        public string Name { get; set; }
+        public Position Pos { get; set; }
+        public char Left { get; set; }
+        public char Right { get; set; }
+        public Color Coloring { get; set; }
+        public int Faction { get; set; }
         public double Delay { get { return 36.0 / Stats.ActSpeed; } }
         private Dijkstra _Seeker = null;
         public Dijkstra Seeker
@@ -119,12 +122,26 @@ namespace DungeonRising
             return new Entity(Name, "" + Left + Right, Coloring, Pos.Y, Pos.X, Faction, Stats.Replicate());
         }
     }
+
     [Serializable]
     [JsonObjectAttribute]
-    public class EntityDictionary : IEnumerable<Entity>
+    public class EntityDictionary : IEnumerable<Entity>, INotifyPropertyChanged
     {
-        public HashDictionary<string, Entity> byName;
-        public HashDictionary<Position, Entity> byPosition;
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public HashDictionary<string, Entity> byName { get; set; }
+        public HashDictionary<Position, Entity> byPosition { get; set; }
+        protected void MarkChanges()
+        {
+            PropertyChangedEventHandler pc = PropertyChanged;
+            if (pc != null)
+            {
+                pc(this, new PropertyChangedEventArgs("byName"));
+                pc(this, new PropertyChangedEventArgs("byPosition"));
+
+            }
+
+        }
         public int Count { get { return byName.Count; } }
         public EntityDictionary()
         {
@@ -158,12 +175,14 @@ namespace DungeonRising
         {
             byPosition.Add(val.Pos, val);
             byName.Add(val.Name, val);
+            MarkChanges();
         }
         public void Add(string key, Entity val)
         {
             val.Name = key;
             byPosition.Add(val.Pos, val);
             byName.Add(key, val);
+            MarkChanges();
         }
         public void AddAll(IEnumerable<Entity> vals)
         {
@@ -180,6 +199,8 @@ namespace DungeonRising
                 {
                     byName[val.Name] = val;
                     byPosition[val.Pos] = val;
+
+                    MarkChanges();
                 }
                 else
                 {
@@ -192,12 +213,16 @@ namespace DungeonRising
             Entity e = byName[key];
             byPosition.Remove(e.Pos);
             byName.Remove(key);
+
+            MarkChanges();
         }
         public void Remove(Position key)
         {
             Entity e = byPosition[key];
             byName.Remove(e.Name);
             byPosition.Remove(key);
+
+            MarkChanges();
         }
 
         public void Move(string key, int yMove, int xMove)
@@ -208,8 +233,7 @@ namespace DungeonRising
             Position pos = e.Pos;
             byPosition.Remove(pos);
             byName.Remove(key);
-            e.Pos.Y += yMove;
-            e.Pos.X += xMove;
+            e.Pos.Move(yMove, xMove);
             Add(key, e);
             /*foreach(var kv in byName)
             {
@@ -286,8 +310,7 @@ namespace DungeonRising
             set
             {
                 if (value.Name == "") throw new ArgumentException("Entity.Name must not be empty.");
-                value.Pos.Y = y;
-                value.Pos.X = x;
+                value.Pos.SetAll(y, x);
                 byPosition[value.Pos] = value;
                 byName[value.Name] = value;
             }
@@ -325,6 +348,7 @@ namespace DungeonRising
             ents.AddAll(this.byName.Values);
             return ents;
         }
+
         public EntityDictionary Replicate()
         {
             EntityDictionary ed = new EntityDictionary();
