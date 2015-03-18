@@ -11,15 +11,14 @@ namespace DungeonRising
     [Serializable]
     public class Entity : IEquatable<Entity>
     {
+        public Sheet Stats;
         public string Name;
         public Position Pos;
         public char Left;
         public char Right;
         public Color Coloring;
-        public int MoveSpeed;
-        public int ActSpeed;
         public int Faction;
-        public double Delay { get { return 36.0 / ActSpeed; } }
+        public double Delay { get { return 36.0 / Stats.ActSpeed; } }
         private Dijkstra _Seeker = null;
         public Dijkstra Seeker
         {
@@ -49,8 +48,7 @@ namespace DungeonRising
             Right = representation[1];
             Coloring = Color.DimGray;
             Pos = new Position(y, x);
-            MoveSpeed = 5;
-            ActSpeed = 1;
+            Stats = new Sheet(5, 1, 5, 1);
             Faction = 0;
         }
         public Entity(string name, string representation, Color coloring, int y, int x, int moveSpeed, int actSpeed, int faction)
@@ -59,9 +57,18 @@ namespace DungeonRising
             Left = representation[0];
             Right = representation[1];
             Coloring = coloring;
-            Pos = new Position(y, x); 
-            MoveSpeed = moveSpeed;
-            ActSpeed = actSpeed;
+            Pos = new Position(y, x);
+            Stats = new Sheet(5, 1, moveSpeed, actSpeed);
+            Faction = faction;
+        }
+        public Entity(string name, string representation, Color coloring, int y, int x, int faction, Sheet stats)
+        {
+            Name = name;
+            Left = representation[0];
+            Right = representation[1];
+            Coloring = coloring;
+            Pos = new Position(y, x);
+            Stats = stats;
             Faction = faction;
         }
         public Entity(string name, string representation, int y, int x)
@@ -71,8 +78,7 @@ namespace DungeonRising
             Right = representation[1];
             Coloring = Color.DimGray;
             Pos = new Position(y, x);
-            MoveSpeed = 5;
-            ActSpeed = 1;
+            Stats = new Sheet(5, 1, 5, 1);
             Faction = 0;
         }
         public Entity()
@@ -82,8 +88,7 @@ namespace DungeonRising
             this.Right = ' ';
             Coloring = Color.DimGray;
             Pos = new Position(0, 0);
-            this.MoveSpeed = 0;
-            this.ActSpeed = 1;
+            Stats = new Sheet(5, 1, 0, 1);
             this.Faction = 0;
         }
 
@@ -93,8 +98,7 @@ namespace DungeonRising
             if (obj == null || !(obj is Entity))
                 return false;
             else
-                return Pos == ((Entity)obj).Pos && Name == ((Entity)obj).Name &&
-                    MoveSpeed == ((Entity)obj).MoveSpeed && ActSpeed == ((Entity)obj).ActSpeed;
+                return Pos == ((Entity)obj).Pos && Name == ((Entity)obj).Name && Stats.Equals(((Entity)obj).Stats);
         }
         public bool Equals(Entity obj)
         {
@@ -102,17 +106,17 @@ namespace DungeonRising
                 return false;
             else
                 return Pos == obj.Pos && Name == obj.Name &&
-                    MoveSpeed == obj.MoveSpeed && ActSpeed == obj.ActSpeed;
+                    Stats.Equals(obj.Stats);
         }
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode() ^ Pos.GetHashCode();
+            return Name.GetHashCode() ^ Pos.GetHashCode() ^ Stats.GetHashCode();
         }
 
         public Entity Replicate()
         {
-            return new Entity(Name, "" + Left + Right, Coloring, Pos.Y, Pos.X, MoveSpeed, ActSpeed, Faction);
+            return new Entity(Name, "" + Left + Right, Coloring, Pos.Y, Pos.X, Faction, Stats.Replicate());
         }
     }
     [Serializable]

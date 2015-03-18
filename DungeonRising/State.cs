@@ -79,7 +79,7 @@ namespace DungeonRising
             if (create != null)
             {
                 C = new T[] { create };
-                RD = new T[] { create };
+//                RD = new T[] { create };
             }
         }
         public RefUpdate(T create, T forward, T delete, T backward)
@@ -87,7 +87,7 @@ namespace DungeonRising
             if (create != null)
             {
                 C = new T[] { create };
-                RD = new T[] { create };
+//                RD = new T[] { create };
             }
             if (forward != null)
             {
@@ -132,14 +132,14 @@ namespace DungeonRising
         public ValUpdate(T create)
         {
             C = new T[] { create };
-            RD = new T[] { create };
+//            RD = new T[] { create };
         }
         public ValUpdate(T? create, T? forward, T? delete, T? backward)
         {
             if (create != null)
             {
                 C = new T[] { create.Value };
-                RD = new T[] { create.Value };
+//                RD = new T[] { create.Value };
             }
             if (forward != null)
             {
@@ -573,7 +573,7 @@ namespace DungeonRising
             {
 
                 S.Initiative.AddTurn(e.Name, e.Delay);
-                S.TurnsLeft += e.ActSpeed;
+                S.TurnsLeft += e.Stats.ActSpeed;
             }
         }
         public static void Remember()

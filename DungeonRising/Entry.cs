@@ -96,6 +96,7 @@ namespace DungeonRising
             Entity first = Chariot.S.Entities[Chariot.S.Initiative.PeekTurn().Actor];
             if (first.Faction == 0)
                 Chariot.S.CurrentReason = WaitReason.Receiving;
+            Chariot.Remember();
 
 
 
@@ -165,10 +166,12 @@ namespace DungeonRising
             if (Input == Terminal.TK_LBRACKET)
             {
                 Chariot.Backward();
+                return;
             }
             else if (Input == Terminal.TK_RBRACKET)
             {
                 Chariot.Forward();
+                return;
             }
             Position p = new Position(0, 0);
             Dijkstra seeker = Chariot.S.Entities[Chariot.S.CurrentActor].Seeker;
@@ -200,7 +203,7 @@ namespace DungeonRising
             {
                 for (int x = OffsetX, sx = 0; sx < 25; x++, sx++)
                 {
-                    if (Chariot.S.CurrentReason == WaitReason.Receiving && seeker.CombinedMap[y, x] <= Chariot.S.Entities[Chariot.S.CurrentActor].MoveSpeed)
+                    if (Chariot.S.CurrentReason == WaitReason.Receiving && seeker.CombinedMap[y, x] <= Chariot.S.Entities[Chariot.S.CurrentActor].Stats.MoveSpeed)
                     {
                         Terminal.BkColor(highlightColors[(currentHighlightColor + 100 - seeker.CombinedMap[y, x]) % highlightColors.Length]);
                         Terminal.Put(sx * 2 + 1, sy + 1, ' ');
@@ -269,7 +272,7 @@ namespace DungeonRising
             {
                 Chariot.S.StepsLeft = Chariot.S.Entities.Step(Chariot.S.CurrentActor);
                 ++Chariot.S.StepsTaken;
-                if (Chariot.S.StepsLeft <= 0 || Chariot.S.StepsTaken > Chariot.S.Entities[Chariot.S.CurrentActor].MoveSpeed)
+                if (Chariot.S.StepsLeft <= 0 || Chariot.S.StepsTaken > Chariot.S.Entities[Chariot.S.CurrentActor].Stats.MoveSpeed)
                 {
                     FinishMove();
                 }
@@ -318,6 +321,7 @@ namespace DungeonRising
         private void FinishMove()
         {
 
+            
             Chariot.S.StepsTaken = 0;
             Entity e = Chariot.S.Entities[Chariot.S.CurrentActor];
             e.Seeker.Reset();
@@ -328,10 +332,11 @@ namespace DungeonRising
             if (--Chariot.S.TurnsLeft <= 0)
                 Chariot.ResetInitiative();
             Chariot.S.Initiative.AddTurn(e.Name, e.Delay);
+
             Chariot.S.CurrentReason = WaitReason.CameraMoving;
 
-            Chariot.Remember();
             Chariot.S.CurrentActor = next.Name;
+            Chariot.Remember();
 
 
         }
@@ -373,7 +378,7 @@ namespace DungeonRising
                                         Chariot.S.Cursor.Y = (Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY;
                                         Chariot.S.Cursor.X = (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX;
                                         Chariot.S.Cursor.MakeValid(Chariot.S.DungeonStart.Height, Chariot.S.DungeonStart.Width);
-                                        if (Chariot.S.Entities[Chariot.S.CurrentActor].Seeker.CombinedMap[Chariot.S.Cursor.Y, Chariot.S.Cursor.X] <= Chariot.S.Entities[Chariot.S.CurrentActor].MoveSpeed)
+                                        if (Chariot.S.Entities[Chariot.S.CurrentActor].Seeker.CombinedMap[Chariot.S.Cursor.Y, Chariot.S.Cursor.X] <= Chariot.S.Entities[Chariot.S.CurrentActor].Stats.MoveSpeed)
                                         {
                                             Chariot.S.CurrentReason = WaitReason.Animating;
                                         }
