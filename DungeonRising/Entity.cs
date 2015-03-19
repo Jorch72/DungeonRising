@@ -6,12 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using Newtonsoft.Json;
-using PropertyChanged;
-using System.ComponentModel;
 namespace DungeonRising
 {
     [Serializable]
-    [ImplementPropertyChanged]
+    
     public class Entity : IEquatable<Entity>
     {
         public Sheet Stats { get; set; }
@@ -125,23 +123,10 @@ namespace DungeonRising
 
     [Serializable]
     [JsonObjectAttribute]
-    public class EntityDictionary : IEnumerable<Entity>, INotifyPropertyChanged
+    public class EntityDictionary : IEnumerable<Entity>
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         public HashDictionary<string, Entity> byName { get; set; }
         public HashDictionary<Position, Entity> byPosition { get; set; }
-        protected void MarkChanges()
-        {
-            PropertyChangedEventHandler pc = PropertyChanged;
-            if (pc != null)
-            {
-                pc(this, new PropertyChangedEventArgs("byName"));
-                pc(this, new PropertyChangedEventArgs("byPosition"));
-
-            }
-
-        }
         public int Count { get { return byName.Count; } }
         public EntityDictionary()
         {
@@ -175,14 +160,12 @@ namespace DungeonRising
         {
             byPosition.Add(val.Pos, val);
             byName.Add(val.Name, val);
-            MarkChanges();
         }
         public void Add(string key, Entity val)
         {
             val.Name = key;
             byPosition.Add(val.Pos, val);
             byName.Add(key, val);
-            MarkChanges();
         }
         public void AddAll(IEnumerable<Entity> vals)
         {
@@ -199,8 +182,6 @@ namespace DungeonRising
                 {
                     byName[val.Name] = val;
                     byPosition[val.Pos] = val;
-
-                    MarkChanges();
                 }
                 else
                 {
@@ -213,16 +194,12 @@ namespace DungeonRising
             Entity e = byName[key];
             byPosition.Remove(e.Pos);
             byName.Remove(key);
-
-            MarkChanges();
         }
         public void Remove(Position key)
         {
             Entity e = byPosition[key];
             byName.Remove(e.Name);
             byPosition.Remove(key);
-
-            MarkChanges();
         }
 
         public void Move(string key, int yMove, int xMove)

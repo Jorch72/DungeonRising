@@ -1,5 +1,4 @@
-﻿using PropertyChanged;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +7,7 @@ using System.Threading.Tasks;
 namespace DungeonRising
 {
     [Serializable]
-    [ImplementPropertyChanged]
+    
     public class Dungeon
     {
         public const int FLOOR = 5000, WALL = 9999, DARK = 11111;

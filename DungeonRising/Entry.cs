@@ -96,9 +96,11 @@ namespace DungeonRising
             Chariot.ResetInitiative();
             Entity first = Chariot.S.Entities[Chariot.S.Initiative.PeekTurn().Actor];
             if (first.Faction == 0)
+            {
                 Chariot.S.CurrentReason = WaitReason.Receiving;
-            Chariot.Remember();
+                Chariot.Remember();
 
+            }
 
 
             //            Player.Seeker.GetPath(Player.Y, Player.X);
@@ -164,14 +166,9 @@ namespace DungeonRising
         }
         public void Render()
         {
-            if (Input == Terminal.TK_LBRACKET)
+            if (Input == Terminal.TK_LBRACKET || Input == Terminal.TK_ESCAPE)
             {
                 Chariot.Backward();
-                return;
-            }
-            else if (Input == Terminal.TK_RBRACKET)
-            {
-                Chariot.Forward();
                 return;
             }
             Position p = new Position(0, 0);
@@ -309,6 +306,7 @@ namespace DungeonRising
                     if (Chariot.S.Entities[Chariot.S.CurrentActor].Faction == 0)
                     {
                         Chariot.S.CurrentReason = WaitReason.Receiving;
+                        Chariot.Remember();
                     }
                     else
                     {
@@ -337,7 +335,6 @@ namespace DungeonRising
             Chariot.S.CurrentReason = WaitReason.CameraMoving;
 
             Chariot.S.CurrentActor = next.Name;
-            Chariot.Remember();
 
 
         }
