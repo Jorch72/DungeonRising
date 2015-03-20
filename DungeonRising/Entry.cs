@@ -65,7 +65,7 @@ namespace DungeonRising
             S.Initiative = new Schedule();
             S.TurnsLeft = 0;
             Position spawnPoint = new Position(-1, -1);
-            S.DungeonStart = new Dungeon(TilesetType.ROUND_ROOMS_DIAGONAL_CORRIDORS, 60, 60);
+            S.DungeonStart = new Dungeon(TilesetType.DEFAULT_DUNGEON, 40, 40); //ROUND_ROOMS_DIAGONAL_CORRIDORS
             spawnPoint = S.DungeonStart.LogicWorld.RandomMatch(Dungeon.FLOOR);
             
 
@@ -268,6 +268,7 @@ namespace DungeonRising
             Terminal.Clear();
             if (Chariot.S.CurrentReason == WaitReason.Animating)
             {
+                Chariot.S.Entities[Chariot.S.CurrentActor].Seeker.Scan();
                 Chariot.S.StepsLeft = Chariot.S.Entities.Step(Chariot.S.CurrentActor);
                 ++Chariot.S.StepsTaken;
                 if (Chariot.S.StepsLeft <= 0 || Chariot.S.StepsTaken > Chariot.S.Entities[Chariot.S.CurrentActor].Stats.MoveSpeed)
@@ -279,27 +280,27 @@ namespace DungeonRising
             {
                 if (Chariot.S.Camera.X < Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X)
                 {
-                    Chariot.S.Camera = Chariot.S.Camera.Move(0, 1);
+                    Chariot.S.Camera.Move(0, 1);
                     if (Chariot.S.Camera.X + 12 > Chariot.S.DungeonStart.World.GetUpperBound(1))
-                        Chariot.S.Camera = Chariot.S.Camera.SetX(Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X);
+                        Chariot.S.Camera.X = Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X;
                 }
                 else if (Chariot.S.Camera.X > Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X)
                 {
-                    Chariot.S.Camera = Chariot.S.Camera.Move(0, -1);
+                    Chariot.S.Camera.Move(0, -1);
                     if (Chariot.S.Camera.X < 12)
-                        Chariot.S.Camera = Chariot.S.Camera.SetX(Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X);
+                        Chariot.S.Camera.X = Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X;
                 }
                 if (Chariot.S.Camera.Y < Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y)
                 {
-                    Chariot.S.Camera = Chariot.S.Camera.Move(1, 0);
+                    Chariot.S.Camera.Move(1, 0);
                     if (Chariot.S.Camera.Y + 12 > Chariot.S.DungeonStart.World.GetUpperBound(0))
-                        Chariot.S.Camera = Chariot.S.Camera.SetY(Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y);
+                        Chariot.S.Camera.Y = Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y;
                 }
                 else if (Chariot.S.Camera.Y > Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y)
                 {
-                    Chariot.S.Camera = Chariot.S.Camera.Move(-1, 0);
+                    Chariot.S.Camera.Move(-1, 0);
                     if (Chariot.S.Camera.Y < 12)
-                        Chariot.S.Camera = Chariot.S.Camera.SetY(Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y);
+                        Chariot.S.Camera.Y = Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y;
                 }
                 if (Chariot.S.Camera.X == Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X && Chariot.S.Camera.Y == Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y)
                 {

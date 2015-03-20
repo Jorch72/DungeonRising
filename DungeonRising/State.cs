@@ -16,8 +16,8 @@ namespace DungeonRising
         public string CurrentActor { get; set; }
         public int StepsLeft { get; set; }
         public int StepsTaken { get; set; }
-        public Position Cursor { get; set; }
-        public Position Camera { get; set; }
+        public Position Cursor;
+        public Position Camera;
         public WaitReason CurrentReason { get; set; }
         public Schedule Initiative { get; set; }
         public long TurnsLeft { get; set; }

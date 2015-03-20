@@ -32,22 +32,17 @@ namespace DungeonRising
             if (X >= Width)
                 X = Width - 1;
         }
-        public Position Move(int y, int x)
+        public void Move(int y, int x)
         {
-            return new Position(Y + y, X + x);
+            Y += y;
+            X += x;
         }
-        public Position SetAll(int y, int x)
+        public void SetAll(int y, int x)
         {
 
-            return new Position(y, x);
-        }
-        public Position SetX(int x)
-        {
-            return new Position(Y, x);
-        }
-        public Position SetY(int y)
-        {
-            return new Position(y, X);
+            Y = y;
+            X = x;
+            
         }
         public static Position FromIndex(int index, int Width)
         {

@@ -14,7 +14,7 @@ namespace DungeonRising
     {
         public Sheet Stats { get; set; }
         public string Name { get; set; }
-        public Position Pos { get; set; }
+        public Position Pos;
         public char Left { get; set; }
         public char Right { get; set; }
         public Color Coloring { get; set; }
@@ -212,12 +212,16 @@ namespace DungeonRising
             byName.Remove(key);
             e.Pos.Move(yMove, xMove);
             Add(key, e);
-            /*foreach(var kv in byName)
+            foreach (var kv in byName)
             {
-                kv.Value.Seeker.ResetCell(pos.Y, pos.X);
-                //kv.Value.Seeker.SetOccupied(e.Y, e.X);
-            }*/
-            e.Seeker.SetGoal(e.Pos.Y, e.Pos.X);
+                if (kv.Value.Faction == e.Faction)
+                {
+                    kv.Value.Seeker.UpdateAlly(pos, e.Pos);
+                }
+            }
+
+            byName[key].Seeker.SetGoal(e.Pos.Y, e.Pos.X);
+            byPosition[e.Pos].Seeker.SetGoal(e.Pos.Y, e.Pos.X);
 
             foreach (var kv in byName)
             {
@@ -235,12 +239,15 @@ namespace DungeonRising
             byName.Remove(key);
             e.Pos = dest;
             Add(key, e);
-            /*foreach(var kv in byName)
+            foreach (var kv in byName)
             {
-                kv.Value.Seeker.ResetCell(pos.Y, pos.X);
-                //kv.Value.Seeker.SetOccupied(e.Y, e.X);
-            }*/
-            e.Seeker.SetGoal(dest.Y, dest.X);
+                if (kv.Value.Faction == e.Faction)
+                {
+                    kv.Value.Seeker.UpdateAlly(pos, dest);
+                }
+            }
+            byName[key].Seeker.SetGoal(dest.Y, dest.X);
+            byPosition[dest].Seeker.SetGoal(dest.Y, dest.X);
 
             foreach (var kv in byName)
             {
