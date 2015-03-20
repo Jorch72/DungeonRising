@@ -77,8 +77,10 @@ namespace DungeonRising
             };
         private const int GOAL = 0;
         public HashDictionary<int, int> goals;
-        private HashDictionary<int, int> fresh, allies;
+        private HashDictionary<int, int> fresh, allies, closed, open;
         public static XSRandom Rand;
+        private static int frustration = 0;
+
         public Dijkstra()
         {
             Rand = new XSRandom();
@@ -87,6 +89,8 @@ namespace DungeonRising
             goals = new HashDictionary<int, int>();
             fresh = new HashDictionary<int, int>();
             allies = new HashDictionary<int, int>();
+            closed = new HashDictionary<int, int>();
+            open = new HashDictionary<int, int>();
         }
         public Dijkstra(int[,] level)
         {
@@ -100,6 +104,8 @@ namespace DungeonRising
             goals = new HashDictionary<int, int>();
             fresh = new HashDictionary<int, int>();
             allies = new HashDictionary<int, int>();
+            closed = new HashDictionary<int, int>();
+            open = new HashDictionary<int, int>();
         }
         public void Reset()
         {
@@ -113,7 +119,6 @@ namespace DungeonRising
             {
                 return;
             }
-            CombinedMap[y, x] = GOAL;
             if (allies.Contains(y * Width + x))
                 allies.Remove(y * Width + x);
             goals[y * Width + x] = GOAL;
@@ -124,9 +129,6 @@ namespace DungeonRising
         }
         public void ResetCell(int y, int x)
         {
-            if (CombinedMap[y, x] == GOAL)
-                goals.Remove(y * Width + x);
-
             CombinedMap[y, x] = PhysicalMap[y, x];
         }
         public void RemoveAlly(Position pos)
@@ -144,11 +146,11 @@ namespace DungeonRising
             }
             allies[end.Y * Width + end.X] = Dungeon.WALL;
         }
-        public void AddAly(Position pos)
+        public void AddAlly(Position pos)
         {
             allies[pos.Y * Width + pos.X] = Dungeon.WALL;
         }
-        public void AddAly(IEnumerable<Position> friends)
+        public void AddAlly(IEnumerable<Position> friends)
         {
             foreach (Position pos in friends)
             {
@@ -167,10 +169,9 @@ namespace DungeonRising
         }
         public int[,] Scan()
         {
-            HashDictionary<int, int> closed = new HashDictionary<int, int>(), open = new HashDictionary<int, int>();
             CombinedMap = PhysicalMap.Replicate();
 
-            closed.AddAll(allies);
+//            closed.AddAll(allies);
             for(int y = 0; y < Height; y++)
             {
                 for(int x = 0; x < Width; x++)
@@ -207,6 +208,8 @@ namespace DungeonRising
                 open = fresh.Replicate();
                 fresh.Clear();
             }
+            closed.Clear();
+            open.Clear();
 
             for (int y = 0; y < Height; y++)
             {
@@ -218,25 +221,32 @@ namespace DungeonRising
                     }
                 }
             }
-            
+
             return CombinedMap;
         }
 
-        public ArrayList<Position> GetPath(int startY, int startX)
+        public ArrayList<Position> GetPath(Position start, Position goal, int length)
         {
             Path = new ArrayList<Position>();
-            int frustration = 0;
-            if (CombinedMap[startY, startX] > Dungeon.FLOOR)
+            if (CombinedMap[goal.Y, goal.X] > Dungeon.FLOOR)
             {
                 return Path;
             }
-            Position currentPos = new Position(startY, startX);
-            Path.Add(currentPos);
+            SetGoal(goal.Y, goal.X);
+            Scan();
+            Position currentPos = start;
+//            Path.Add(currentPos);
             while (CombinedMap[currentPos.Y, currentPos.X] > 0)
             {
                 if (frustration > 500)
                 {
                     Path = new ArrayList<Position>();
+                    frustration = 0;
+                    foreach (var kv in goals)
+                    {
+                        ResetCell(kv.Key / Width, kv.Key % Width);
+                    }
+                    goals.Clear();
                     return Path;
                 } int best = 9999, choice = 0, whichOrder = Rand.Next(24);
                 int[] dirsY = DirShuffledY[whichOrder], dirsX = DirShuffledX[whichOrder];
@@ -250,6 +260,7 @@ namespace DungeonRising
                 }
                 if(best >= 9999)
                 {
+                    frustration = 0;
                     Path = new ArrayList<Position>();
                     return Path;
                 }
@@ -257,7 +268,28 @@ namespace DungeonRising
                 currentPos.X += dirsX[choice];
                 Path.Add(currentPos);
                 frustration++;
+                if (Path.Count >= length)
+                {
+                    if(allies.Contains(currentPos.Y * Width + currentPos.X))
+                    {
+                        closed.AddAll(allies);
+                        Scan();
+                        return GetPath(start, goal, length);
+                    }
+                    foreach (var kv in goals)
+                    {
+                        ResetCell(kv.Key / Width, kv.Key % Width);
+                    }
+                    goals.Clear();
+                    return Path;
+                }
             }
+            frustration = 0;
+            foreach (var kv in goals)
+            {
+                ResetCell(kv.Key / Width, kv.Key % Width);
+            }
+            goals.Clear();
             return Path;
         }
         /*

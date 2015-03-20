@@ -28,8 +28,8 @@ namespace DungeonRising
                 if (_Seeker == null)
                 {
                     _Seeker = new Dijkstra(Chariot.S.DungeonStart.LogicWorld);
-                    _Seeker.SetGoal(Pos.Y, Pos.X);
-                    _Seeker.Scan();
+//                    _Seeker.SetGoal(Pos.Y, Pos.X);
+//                    _Seeker.Scan();
                 } return _Seeker;
             }
             set
@@ -220,13 +220,9 @@ namespace DungeonRising
                 }
             }
 
-            byName[key].Seeker.SetGoal(e.Pos.Y, e.Pos.X);
-            byPosition[e.Pos].Seeker.SetGoal(e.Pos.Y, e.Pos.X);
+//            byName[key].Seeker.SetGoal(e.Pos.Y, e.Pos.X);
+//            byPosition[e.Pos].Seeker.SetGoal(e.Pos.Y, e.Pos.X);
 
-            foreach (var kv in byName)
-            {
-                kv.Value.Seeker.Scan();
-            }
             //Seeker.GetPath(Y, X);
         }
         public void MoveDirectly(string key, Position dest)
@@ -246,13 +242,9 @@ namespace DungeonRising
                     kv.Value.Seeker.UpdateAlly(pos, dest);
                 }
             }
-            byName[key].Seeker.SetGoal(dest.Y, dest.X);
-            byPosition[dest].Seeker.SetGoal(dest.Y, dest.X);
+//            byName[key].Seeker.SetGoal(dest.Y, dest.X);
+//            byPosition[dest].Seeker.SetGoal(dest.Y, dest.X);
 
-            foreach (var kv in byName)
-            {
-                kv.Value.Seeker.Scan();
-            }
             //Seeker.GetPath(Y, X);
         }
         public int Step(string key)
@@ -261,8 +253,8 @@ namespace DungeonRising
                 return 0;
             Entity e = byName[key];
             if (e.Seeker.Path == null || e.Seeker.Path.Count == 0)
-                return e.Seeker.Path.Count;
-            Position nxt = e.Seeker.Path.Pop();
+                return 0;
+            Position nxt = e.Seeker.Path.RemoveFirst();
             MoveDirectly(key, nxt);
             return e.Seeker.Path.Count;
         }

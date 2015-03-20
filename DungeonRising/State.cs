@@ -38,8 +38,8 @@ namespace DungeonRising
             {
                 Dijkstra dummy = e.Seeker;
                 e.Seeker.CombinedMap = Dijkstra.PhysicalMap.Replicate();
-                e.Seeker.SetGoal(e.Pos.Y, e.Pos.X);
-                e.Seeker.Scan();
+//                e.Seeker.SetGoal(e.Pos.Y, e.Pos.X);
+//                e.Seeker.Scan();
             }
             return this;
         }
