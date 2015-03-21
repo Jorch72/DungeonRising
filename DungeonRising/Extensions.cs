@@ -340,11 +340,18 @@ namespace DungeonRising
         }
         public static void AddAll<K, V>(this Dictionary<K, V> dict, Dictionary<K, V> items)
         {
-            foreach(var kv in items)
+            foreach (var kv in items)
             {
                 dict.Add(kv.Key, kv.Value);
             }
 
+        }
+        public static void UpdateAll<K, V>(this HashDictionary<K, V> dict, HashDictionary<K, V> items)
+        {
+            foreach (var kv in items)
+            {
+                dict[kv.Key] = kv.Value;
+            }
         }
         public static Dictionary<K, V> Replicate<K, V>(this Dictionary<K, V> dict)
         {

@@ -76,8 +76,8 @@ namespace DungeonRising
                 
             };
         private const int GOAL = 0;
-        public HashDictionary<int, int> goals;
-        private HashDictionary<int, int> fresh, allies, closed, open;
+        public HashDictionary<int, int> goals, allies, obstacles;
+        private HashDictionary<int, int> fresh, closed, open;
         public static XSRandom Rand;
         private static int frustration = 0;
 
@@ -89,6 +89,7 @@ namespace DungeonRising
             goals = new HashDictionary<int, int>();
             fresh = new HashDictionary<int, int>();
             allies = new HashDictionary<int, int>();
+            obstacles = new HashDictionary<int, int>();
             closed = new HashDictionary<int, int>();
             open = new HashDictionary<int, int>();
         }
@@ -104,6 +105,7 @@ namespace DungeonRising
             goals = new HashDictionary<int, int>();
             fresh = new HashDictionary<int, int>();
             allies = new HashDictionary<int, int>();
+            obstacles = new HashDictionary<int, int>();
             closed = new HashDictionary<int, int>();
             open = new HashDictionary<int, int>();
         }
@@ -121,6 +123,8 @@ namespace DungeonRising
             }
             if (allies.Contains(y * Width + x))
                 allies.Remove(y * Width + x);
+            if (obstacles.Contains(y * Width + x))
+                obstacles.Remove(y * Width + x);
             goals[y * Width + x] = GOAL;
         }
         public void SetOccupied(int y, int x)
@@ -157,6 +161,51 @@ namespace DungeonRising
                 allies[pos.Y * Width + pos.X] = Dungeon.WALL;
             }
         }
+        public void RemoveObstacle(Position pos)
+        {
+            if (obstacles.Contains(pos.Y * Width + pos.X))
+            {
+                obstacles.Remove(pos.Y * Width + pos.X);
+            }
+        }
+        public void RemoveObstacles(IEnumerable<Position> blocks)
+        {
+            foreach (Position pos in blocks)
+            {
+                obstacles.Remove(pos.Y * Width + pos.X);
+            }
+        }
+        public void UpdateObstacle(Position start, Position end)
+        {
+            if (obstacles.Contains(start.Y * Width + start.X))
+            {
+                obstacles.Remove(start.Y * Width + start.X);
+            }
+            obstacles[end.Y * Width + end.X] = Dungeon.WALL;
+        }
+        public void AddObstacle(Position pos)
+        {
+            obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+        }
+        public void AddObstacles(IEnumerable<Position> blocks)
+        {
+            foreach (Position pos in blocks)
+            {
+                obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+            }
+        }
+        public void SetObstacles(HashDictionary<int, int> other)
+        {
+            obstacles = other.Replicate();
+        }
+        public void SetObstacles(IEnumerable<Position> blocks)
+        {
+            obstacles.Clear();
+            foreach (Position pos in blocks)
+            {
+                obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+            }
+        }
         protected void SetFresh(int y, int x, int counter)
         {
             CombinedMap[y, x] = counter;
@@ -170,7 +219,7 @@ namespace DungeonRising
         public int[,] Scan()
         {
             CombinedMap = PhysicalMap.Replicate();
-
+            closed.UpdateAll(obstacles);
 //            closed.AddAll(allies);
             for(int y = 0; y < Height; y++)
             {

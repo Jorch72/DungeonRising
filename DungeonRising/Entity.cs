@@ -218,6 +218,10 @@ namespace DungeonRising
                 {
                     kv.Value.Seeker.UpdateAlly(pos, e.Pos);
                 }
+                else
+                {
+                    kv.Value.Seeker.UpdateObstacle(pos, e.Pos);
+                }
             }
 
 //            byName[key].Seeker.SetGoal(e.Pos.Y, e.Pos.X);
@@ -240,6 +244,10 @@ namespace DungeonRising
                 if (kv.Value.Faction == e.Faction)
                 {
                     kv.Value.Seeker.UpdateAlly(pos, dest);
+                }
+                else
+                {
+                    kv.Value.Seeker.UpdateObstacle(pos, dest);
                 }
             }
 //            byName[key].Seeker.SetGoal(dest.Y, dest.X);

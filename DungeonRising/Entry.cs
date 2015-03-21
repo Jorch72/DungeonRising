@@ -91,6 +91,11 @@ namespace DungeonRising
                     S.Entities.Add(baddie);
                 }
             }
+            foreach(Entity ent in S.Entities)
+            {
+                ent.Seeker.AddObstacles(S.Entities.byPosition.Keys);
+                ent.Seeker.RemoveObstacles(S.Entities.byPosition.Filter(kv => kv.Value.Faction == ent.Faction).Select(e => e.Key));
+            }
             S.StepsTaken = 0;
             S.XSSRState = XSSR.GetState();
             Chariot.S = S;
@@ -202,6 +207,7 @@ namespace DungeonRising
             if (Chariot.S.CurrentReason == WaitReason.Receiving)
             {
                 Seeker.SetGoal(acting.Pos.Y, acting.Pos.X);
+                Seeker.SetObstacles(acting.Seeker.obstacles);
                 Seeker.Scan();
                 for (int y = OffsetY, sy = 0; sy < 25; y++, sy++)
                 {
@@ -397,6 +403,12 @@ namespace DungeonRising
                                         Chariot.S.Cursor.MakeValid(Chariot.S.DungeonStart.Height, Chariot.S.DungeonStart.Width);
                                         if (acting.Seeker.Path.Contains(Chariot.S.Cursor))
                                         {
+                                            Seeker.goals.Clear();
+                                            Chariot.S.CurrentReason = WaitReason.Animating;
+                                        }
+                                        else if (Chariot.S.Cursor == acting.Pos)
+                                        {
+                                            acting.Seeker.Path.Add(acting.Pos); 
                                             Seeker.goals.Clear();
                                             Chariot.S.CurrentReason = WaitReason.Animating;
                                         }
