@@ -8,6 +8,7 @@ using BearLib;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Diagnostics;
 namespace DungeonRising
 {
     public enum WaitReason
@@ -58,6 +59,9 @@ namespace DungeonRising
         public int OffsetX = 0, OffsetY = 0;
         public int Input = 0;
         public Dijkstra Seeker;
+        public XSRandom VisualRandom;
+        private Stopwatch timer;
+        private long now;
         public static string IconGlyphs = "ሀሁሂሃሄህሆሇለሉሊላሌልሎሏሐሑሒሓሔሕሖሗመሙሚማሜ";
         public Entry()
         {
@@ -75,7 +79,10 @@ namespace DungeonRising
             S.Cursor = new Position(spawnPoint.Y, spawnPoint.X);
             S.Camera = new Position(spawnPoint.Y, spawnPoint.X);
             Player.Seeker = new Dijkstra(S.DungeonStart.LogicWorld);
+
             Seeker = new Dijkstra(S.DungeonStart.LogicWorld);
+            VisualRandom = new XSRandom();
+
 //            Player.Seeker.SetGoal(Player.Pos.Y, Player.Pos.X);
 //            Player.Seeker.Scan();
             S.Entities.Add("Player", Player);
@@ -106,7 +113,6 @@ namespace DungeonRising
             {
                 Chariot.S.CurrentReason = WaitReason.Receiving;
                 Chariot.Remember();
-
             }
 
 
@@ -115,6 +121,8 @@ namespace DungeonRising
         public Entry(State state)
         {
             Chariot.S = state;
+            Seeker = new Dijkstra(Chariot.S.DungeonStart.LogicWorld);
+            VisualRandom = new XSRandom();
         }
         public static Entry Self = null;
         
@@ -159,25 +167,30 @@ namespace DungeonRising
             Terminal.Set("log: level=trace");
             Terminal.Set("window: title='Dungeon Rising', size=90x30; font: Rogue-Zodiac-12x24.png, size=12x24, codepage=custom.txt;");
             Self.AnimationThread = new Thread(() => {
+                Self.timer = Stopwatch.StartNew();
+                Self.now = Self.timer.ElapsedMilliseconds;
                 while (true)
                 {
-                    Self.currentPlayerColor = (Self.currentPlayerColor + 1) % 12;
-                    Self.currentHighlightColor = (Self.currentHighlightColor + 1) % 8;
-                    Self.Render();
-                    Thread.Sleep(70);
+                    Self.Render(Self.timer.ElapsedMilliseconds, Self.now);
                 }
             });
             Self.AnimationThread.IsBackground = true;
             Self.AnimationThread.Start();
             Self.RunEntry();
         }
-        public void Render()
+        public void Render(long currentTime, long previousTime)
         {
+            long delta = currentTime - previousTime;
+            
             if (Input == Terminal.TK_LBRACKET || Input == Terminal.TK_ESCAPE)
             {
                 Chariot.Backward();
                 return;
             }
+            now = timer.ElapsedMilliseconds;
+
+            currentPlayerColor = ((int)currentTime / 80) % 12;
+            currentHighlightColor = ((int)currentTime / 80) % 8;
             Position p = new Position(0, 0);
             Entity acting = Chariot.S.Entities[Chariot.S.CurrentActor];
             int top = Chariot.S.Camera.Y - 12, bottom = Chariot.S.Camera.Y + 12, left = Chariot.S.Camera.X - 12, right = Chariot.S.Camera.X + 12;
@@ -292,6 +305,11 @@ namespace DungeonRising
             Terminal.Clear();
             if (Chariot.S.CurrentReason == WaitReason.Animating)
             {
+                if (delta < 85)
+                {
+                    now = previousTime;
+                    return;
+                }
                 Chariot.S.StepsLeft = Chariot.S.Entities.Step(Chariot.S.CurrentActor);
                 ++Chariot.S.StepsTaken;
                 if (Chariot.S.StepsLeft <= 0 || Chariot.S.StepsTaken > acting.Stats.MoveSpeed)
@@ -301,6 +319,11 @@ namespace DungeonRising
             }
             else if(Chariot.S.CurrentReason == WaitReason.CameraMoving)
             {
+                if (delta < 55)
+                {
+                    now = previousTime;
+                    return;
+                }
                 if (Chariot.S.Camera.X < acting.Pos.X)
                 {
                     Chariot.S.Camera.Move(0, 1);
