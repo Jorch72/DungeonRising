@@ -200,7 +200,7 @@ namespace DungeonRising
             byName.Remove(key);
             foreach(var kv in byName)
             {
-                kv.Value.Seeker.RemoveObstacle(e.Pos);
+                kv.Value.Seeker.RemoveEnemy(e.Pos);
                 kv.Value.Seeker.RemoveAlly(e.Pos);
             }
             Chariot.S.Initiative.CancelTurn(e.Name);
@@ -212,7 +212,7 @@ namespace DungeonRising
             byPosition.Remove(key);
             foreach (var kv in byName)
             {
-                kv.Value.Seeker.RemoveObstacle(e.Pos);
+                kv.Value.Seeker.RemoveEnemy(e.Pos);
                 kv.Value.Seeker.RemoveAlly(e.Pos);
             }
             Chariot.S.Initiative.CancelTurn(e.Name);
@@ -236,7 +236,7 @@ namespace DungeonRising
                 }
                 else
                 {
-                    kv.Value.Seeker.UpdateObstacle(pos, e.Pos);
+                    kv.Value.Seeker.UpdateEnemy(pos, e.Pos);
                 }
             }
 
@@ -263,7 +263,7 @@ namespace DungeonRising
                 }
                 else
                 {
-                    kv.Value.Seeker.UpdateObstacle(pos, dest);
+                    kv.Value.Seeker.UpdateEnemy(pos, dest);
                 }
             }
 //            byName[key].Seeker.SetGoal(dest.Y, dest.X);

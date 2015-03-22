@@ -106,8 +106,10 @@ namespace DungeonRising
             }
             foreach(Entity ent in S.Entities)
             {
-                ent.Seeker.AddObstacles(S.Entities.byPosition.Keys);
-                ent.Seeker.RemoveObstacles(S.Entities.byPosition.Filter(kv => kv.Value.Faction == ent.Faction).Select(e => e.Key));
+                ent.Seeker.AddEnemies(S.Entities.byPosition.Keys);
+                ent.Seeker.RemoveEnemies(S.Entities.byPosition.Filter(kv => kv.Value.Faction == ent.Faction).Select(e => e.Key));
+                ent.Seeker.AddAllies(S.Entities.byPosition.Keys);
+                ent.Seeker.RemoveAllies(S.Entities.byPosition.Filter(kv => kv.Value.Faction != ent.Faction).Select(e => e.Key));
             }
             S.StepsTaken = 0;
             S.XSSRState = XSSR.GetState();
@@ -118,7 +120,7 @@ namespace DungeonRising
             if (first.Faction == 0)
             {
                 Seeker.SetGoal(first.Pos.Y, first.Pos.X);
-                Seeker.SetObstacles(first.Seeker.obstacles);
+                Seeker.SetEnemies(first.Seeker.obstacles);
                 Seeker.Scan();
 
                 Chariot.S.CurrentReason = WaitReason.Receiving;
@@ -390,7 +392,7 @@ namespace DungeonRising
                     {
 
                         Seeker.SetGoal(acting.Pos.Y, acting.Pos.X);
-                        Seeker.SetObstacles(acting.Seeker.obstacles);
+                        Seeker.SetEnemies(acting.Seeker.obstacles);
                         Seeker.Scan();
                         Chariot.S.CurrentReason = WaitReason.Receiving;
                         Chariot.Remember();
@@ -407,11 +409,14 @@ namespace DungeonRising
 
         private void FinishMove()
         {
-
             
             Chariot.S.StepsTaken = 0;
             Entity e = Chariot.S.Entities[Chariot.S.CurrentActor];
-            ArrayList<Position> adj = e.Seeker.AdjacentToObstacle(e.Pos);
+            if(e.Faction != 0)
+            {
+                e.Faction = e.Faction * 1;
+            }
+            ArrayList<Position> adj = e.Seeker.AdjacentToEnemy(e.Pos);
             if(adj.Count > 0)
             {
                 Position rpos = adj[XSSR.Next(adj.Count)];

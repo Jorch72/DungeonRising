@@ -76,7 +76,7 @@ namespace DungeonRising
                 
             };
         private const int GOAL = 0;
-        public HashDictionary<int, int> goals, allies, obstacles;
+        public HashDictionary<int, int> goals, allies, obstacles, enemies;
         private HashDictionary<int, int> fresh, closed, open;
         public static XSRandom Rand;
         private static int frustration = 0;
@@ -89,6 +89,7 @@ namespace DungeonRising
             goals = new HashDictionary<int, int>();
             fresh = new HashDictionary<int, int>();
             allies = new HashDictionary<int, int>();
+            enemies = new HashDictionary<int, int>();
             obstacles = new HashDictionary<int, int>();
             closed = new HashDictionary<int, int>();
             open = new HashDictionary<int, int>();
@@ -105,6 +106,7 @@ namespace DungeonRising
             goals = new HashDictionary<int, int>();
             fresh = new HashDictionary<int, int>();
             allies = new HashDictionary<int, int>();
+            enemies = new HashDictionary<int, int>();
             obstacles = new HashDictionary<int, int>();
             closed = new HashDictionary<int, int>();
             open = new HashDictionary<int, int>();
@@ -154,13 +156,104 @@ namespace DungeonRising
         {
             allies[pos.Y * Width + pos.X] = Dungeon.WALL;
         }
-        public void AddAlly(IEnumerable<Position> friends)
+        public void AddAllies(IEnumerable<Position> friends)
         {
             foreach (Position pos in friends)
             {
                 allies[pos.Y * Width + pos.X] = Dungeon.WALL;
             }
         }
+        public void RemoveAllies(IEnumerable<Position> friends)
+        {
+            foreach (Position pos in friends)
+            {
+                allies.Remove(pos.Y * Width + pos.X);
+            }
+        }
+
+
+
+
+        public void RemoveEnemy(Position pos)
+        {
+            if (obstacles.Contains(pos.Y * Width + pos.X))
+            {
+                obstacles.Remove(pos.Y * Width + pos.X);
+            }
+            if (enemies.Contains(pos.Y * Width + pos.X))
+            {
+                enemies.Remove(pos.Y * Width + pos.X);
+            }
+        }
+        public void RemoveEnemies(IEnumerable<Position> blocks)
+        {
+            foreach (Position pos in blocks)
+            {
+                if (obstacles.Contains(pos.Y * Width + pos.X))
+                    obstacles.Remove(pos.Y * Width + pos.X);
+                if (enemies.Contains(pos.Y * Width + pos.X))
+                    enemies.Remove(pos.Y * Width + pos.X);
+            }
+        }
+        public void UpdateEnemy(Position start, Position end)
+        {
+            if (obstacles.Contains(start.Y * Width + start.X))
+            {
+                obstacles.Remove(start.Y * Width + start.X);
+            }
+
+            if (enemies.Contains(start.Y * Width + start.X))
+            {
+                enemies.Remove(start.Y * Width + start.X);
+            }
+            obstacles[end.Y * Width + end.X] = Dungeon.WALL;
+            enemies[end.Y * Width + end.X] = Dungeon.WALL;
+        }
+        public ArrayList<Position> AdjacentToEnemy(Position pos)
+        {
+            ArrayList<Position> adjacent = new ArrayList<Position>();
+            if (enemies.Contains((pos.Y) * Width + (pos.X + 1)))
+                adjacent.Add(new Position(pos.Y, pos.X + 1));
+            if (enemies.Contains((pos.Y) * Width + (pos.X - 1)))
+                adjacent.Add(new Position(pos.Y, pos.X - 1));
+            if (enemies.Contains((pos.Y + 1) * Width + (pos.X)))
+                adjacent.Add(new Position(pos.Y + 1, pos.X));
+            if (enemies.Contains((pos.Y - 1) * Width + (pos.X)))
+                adjacent.Add(new Position(pos.Y - 1, pos.X));
+
+            return adjacent;
+        }
+        public void AddEnemy(Position pos)
+        {
+            obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+            enemies[pos.Y * Width + pos.X] = Dungeon.WALL;
+        }
+        public void AddEnemies(IEnumerable<Position> blocks)
+        {
+            foreach (Position pos in blocks)
+            {
+                obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+                enemies[pos.Y * Width + pos.X] = Dungeon.WALL;
+            }
+        }
+        public void SetEnemies(HashDictionary<int, int> other)
+        {
+            enemies = other.Replicate();
+            obstacles = other.Replicate();
+        }
+        public void SetEnemies(IEnumerable<Position> blocks)
+        {
+            obstacles.Clear();
+            enemies.Clear();
+            foreach (Position pos in blocks)
+            {
+                obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+                enemies[pos.Y * Width + pos.X] = Dungeon.WALL;
+            }
+        }
+
+
+
         public void RemoveObstacle(Position pos)
         {
             if (obstacles.Contains(pos.Y * Width + pos.X))
@@ -183,20 +276,7 @@ namespace DungeonRising
             }
             obstacles[end.Y * Width + end.X] = Dungeon.WALL;
         }
-        public ArrayList<Position> AdjacentToObstacle(Position pos)
-        {
-            ArrayList<Position> adjacent = new ArrayList<Position>();
-            if (obstacles.Contains((pos.Y) * Width + (pos.X + 1)))
-                adjacent.Add(new Position(pos.Y, pos.X + 1));
-            if (obstacles.Contains((pos.Y) * Width + (pos.X - 1)))
-                adjacent.Add(new Position(pos.Y, pos.X - 1));
-            if (obstacles.Contains((pos.Y + 1) * Width + (pos.X)))
-                adjacent.Add(new Position(pos.Y + 1, pos.X));
-            if (obstacles.Contains((pos.Y - 1) * Width + (pos.X)))
-                adjacent.Add(new Position(pos.Y - 1, pos.X));
 
-            return adjacent;
-        }
         public void AddObstacle(Position pos)
         {
             obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
