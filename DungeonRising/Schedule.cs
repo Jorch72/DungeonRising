@@ -89,13 +89,15 @@ namespace DungeonRising
         }
         public void CancelTurn(string cancelled)
         {
+            SortedArray<Turn> sched2 = new SortedArray<Turn>();
             foreach (Turn t in scheduled)
             {
-                if (t.Actor == cancelled)
+                if (t.Actor != cancelled)
                 {
-                    scheduled.Remove(t);
+                    sched2.Add(t);
                 }
             }
+            scheduled = sched2;
         }
         public void ReverseCancelTurn(IEnumerable<Turn> turns)
         {

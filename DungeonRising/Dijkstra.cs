@@ -183,6 +183,20 @@ namespace DungeonRising
             }
             obstacles[end.Y * Width + end.X] = Dungeon.WALL;
         }
+        public ArrayList<Position> AdjacentToObstacle(Position pos)
+        {
+            ArrayList<Position> adjacent = new ArrayList<Position>();
+            if (obstacles.Contains((pos.Y) * Width + (pos.X + 1)))
+                adjacent.Add(new Position(pos.Y, pos.X + 1));
+            if (obstacles.Contains((pos.Y) * Width + (pos.X - 1)))
+                adjacent.Add(new Position(pos.Y, pos.X - 1));
+            if (obstacles.Contains((pos.Y + 1) * Width + (pos.X)))
+                adjacent.Add(new Position(pos.Y + 1, pos.X));
+            if (obstacles.Contains((pos.Y - 1) * Width + (pos.X)))
+                adjacent.Add(new Position(pos.Y - 1, pos.X));
+
+            return adjacent;
+        }
         public void AddObstacle(Position pos)
         {
             obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;

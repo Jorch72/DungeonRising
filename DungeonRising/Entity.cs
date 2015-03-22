@@ -119,6 +119,7 @@ namespace DungeonRising
         {
             return new Entity(Name, "" + Left + Right, Coloring, Pos.Y, Pos.X, Faction, Stats.Replicate());
         }
+
     }
 
     [Serializable]
@@ -158,11 +159,14 @@ namespace DungeonRising
         }
         public void Add(Entity val)
         {
+            val.Stats.SetKilledHandler((o, ea) => Remove(val.Name));
             byPosition.Add(val.Pos, val);
             byName.Add(val.Name, val);
         }
+
         public void Add(string key, Entity val)
         {
+            val.Stats.SetKilledHandler((o, ea) => Remove(val.Name));
             val.Name = key;
             byPosition.Add(val.Pos, val);
             byName.Add(key, val);
@@ -194,12 +198,24 @@ namespace DungeonRising
             Entity e = byName[key];
             byPosition.Remove(e.Pos);
             byName.Remove(key);
+            foreach(var kv in byName)
+            {
+                kv.Value.Seeker.RemoveObstacle(e.Pos);
+                kv.Value.Seeker.RemoveAlly(e.Pos);
+            }
+            Chariot.S.Initiative.CancelTurn(e.Name);
         }
         public void Remove(Position key)
         {
             Entity e = byPosition[key];
             byName.Remove(e.Name);
             byPosition.Remove(key);
+            foreach (var kv in byName)
+            {
+                kv.Value.Seeker.RemoveObstacle(e.Pos);
+                kv.Value.Seeker.RemoveAlly(e.Pos);
+            }
+            Chariot.S.Initiative.CancelTurn(e.Name);
         }
 
         public void Move(string key, int yMove, int xMove)
@@ -265,6 +281,12 @@ namespace DungeonRising
             Position nxt = e.Seeker.Path.RemoveFirst();
             MoveDirectly(key, nxt);
             return e.Seeker.Path.Count;
+        }
+
+        public void Attack(Position attackerKey, Position defenderKey)
+        {
+            Entity attacker = byPosition[attackerKey], defender = byPosition[defenderKey];
+            defender.Stats.Health.Current -= attacker.Stats.Damage;
         }
 
 

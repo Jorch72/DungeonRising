@@ -9,20 +9,22 @@ namespace DungeonRising
     /// <summary>
     /// Character Sheet of statistics and stuff.
     /// </summary>
+    [Serializable]
     public class Sheet
     {
-        public Gauge Health { get; set; }
-        public int Damage { get; set; }
-        public int MoveSpeed { get; set; }
-        public int ActSpeed { get; set; }
-        public event EventHandler Killed;
+        public Gauge Health;
+        public int Damage;
+        public int MoveSpeed;
+        public int ActSpeed;
+        private event EventHandler WhenKilled;
+        
         public Sheet()
         {
 
         }
         public Sheet(int maxHealth, int damage, int moveSpeed, int actSpeed)
         {
-            Killed = null;
+            WhenKilled = null;
             MoveSpeed = moveSpeed;
             ActSpeed = actSpeed;
             Health = new Gauge(maxHealth);
@@ -32,11 +34,17 @@ namespace DungeonRising
 
         void OnZeroHealth(object sender, EventArgs e)
         {
-            EventHandler handler = Killed;
+            EventHandler handler = WhenKilled;
             if (handler != null)
             {
                 handler(this, EventArgs.Empty);
             }
+        }
+
+        public void SetKilledHandler(EventHandler handler)
+        {
+            WhenKilled = null;
+            WhenKilled += handler;
         }
 
         public bool Equals(Sheet other)
@@ -49,7 +57,7 @@ namespace DungeonRising
             Sheet ret = new Sheet();
             ret.Health = Health;
             ret.Damage = Damage;
-            ret.Killed = Killed;
+            ret.WhenKilled = WhenKilled;
             ret.ActSpeed = ActSpeed;
             ret.MoveSpeed = MoveSpeed;
             return ret;
@@ -59,7 +67,7 @@ namespace DungeonRising
             return base.GetHashCode();
         }
     }
-
+    [Serializable]
     public struct Gauge
     {
         public event EventHandler ReachedZero;
@@ -113,6 +121,18 @@ namespace DungeonRising
             privMax = max;
             privCurrent = max;
             ReachedZero = null;
+        }
+        public static Gauge operator -(Gauge start, int amount)
+        {
+            Gauge g = new Gauge(start.Max, start.Current - amount);
+            g.ReachedZero = start.ReachedZero;
+            return g;
+        }
+        public static Gauge operator +(Gauge start, int amount)
+        {
+            Gauge g = new Gauge(start.Max, start.Current + amount);
+            g.ReachedZero = start.ReachedZero;
+            return g;
         }
         public override int GetHashCode()
         {
