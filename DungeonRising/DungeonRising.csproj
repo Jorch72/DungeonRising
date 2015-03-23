@@ -92,6 +92,7 @@
     <Compile Include="Entity.cs" />
     <Compile Include="Entry.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="GuildData.cs" />
     <Compile Include="Herringbone.cs" />
     <Compile Include="Position.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
