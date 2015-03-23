@@ -313,7 +313,7 @@ namespace DungeonRising
         public int[,] Scan()
         {
             CombinedMap = PhysicalMap.Replicate();
-            closed.UpdateAll(obstacles);
+            closed.UpdateAll(enemies);
 //            closed.AddAll(allies);
             for(int y = 0; y < Height; y++)
             {
@@ -329,7 +329,7 @@ namespace DungeonRising
             }
             int numAssigned = goals.Count;
             int iter = 0;
-            open.AddAll(goals);
+            open.UpdateAll(goals);
             int[] dirs = { -Width, 1, Width, -1 };
             while(numAssigned > 0)
             {
@@ -347,7 +347,7 @@ namespace DungeonRising
                         }
                     }
                 }
-                closed.AddAll(open);
+                closed.UpdateAll(open);
                 open = fresh.Replicate();
                 fresh.Clear();
             }

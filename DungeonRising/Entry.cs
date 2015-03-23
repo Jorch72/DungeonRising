@@ -120,7 +120,7 @@ namespace DungeonRising
             if (first.Faction == 0)
             {
                 Seeker.SetGoal(first.Pos.Y, first.Pos.X);
-                Seeker.SetEnemies(first.Seeker.obstacles);
+                Seeker.SetEnemies(first.Seeker.enemies);
                 Seeker.Scan();
 
                 Chariot.S.CurrentReason = WaitReason.Receiving;
@@ -392,7 +392,7 @@ namespace DungeonRising
                     {
 
                         Seeker.SetGoal(acting.Pos.Y, acting.Pos.X);
-                        Seeker.SetEnemies(acting.Seeker.obstacles);
+                        Seeker.SetEnemies(acting.Seeker.enemies);
                         Seeker.Scan();
                         Chariot.S.CurrentReason = WaitReason.Receiving;
                         Chariot.Remember();
