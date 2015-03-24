@@ -177,7 +177,7 @@ namespace DungeonRising
             }
             Terminal.Open();
             Terminal.Set("log: level=trace");
-            Terminal.Set("window: title='Dungeon Rising', size=90x30; font: Rogue-Zodiac-12x24.png, size=12x24, codepage=custom.txt;");
+            Terminal.Set("window: title='Dungeon Rising', size=90x30; font: Rogue-Zodiac-12x24.png, size=12x24, codepage=custom.txt; output: vsync=false");
             Self.AnimationThread = new Thread(() => {
                 Self.timer = Stopwatch.StartNew();
                 Self.now = Self.timer.ElapsedMilliseconds;
