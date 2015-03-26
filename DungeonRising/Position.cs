@@ -17,20 +17,20 @@ namespace DungeonRising
             X = x;
             Y = y;
         }
-        public bool Validate(int Height, int Width)
+        public bool Validate(int height, int width)
         {
-            return (Y >= 0 && Y < Height && X >= 0 && X < Width);
+            return (Y >= 0 && Y < height && X >= 0 && X < width);
         }
-        public void MakeValid(int Height, int Width)
+        public void MakeValid(int height, int width)
         {
             if (Y < 0)
                 Y = 0;
-            if (Y >= Height)
-                Y = Height - 1;
+            if (Y >= height)
+                Y = height - 1;
             if (X < 0)
                 X = 0;
-            if (X >= Width)
-                X = Width - 1;
+            if (X >= width)
+                X = width - 1;
         }
         public void Move(int y, int x)
         {
@@ -44,9 +44,9 @@ namespace DungeonRising
             X = x;
             
         }
-        public static Position FromIndex(int index, int Width)
+        public static Position FromIndex(int index, int width)
         {
-            return new Position(index / Width, index % Width);
+            return new Position(index / width, index % width);
         }
 
         public override bool Equals(Object obj)

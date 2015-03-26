@@ -10,7 +10,7 @@ namespace DungeonRising
     
     public class Dungeon
     {
-        public const int FLOOR = 5000, WALL = 9999, DARK = 11111;
+        public const int Floor = 5000, Wall = 9999, Dark = 11111;
         public int Height { get; set; }
         public int Width { get; set; }
         public char[,] World { get; set; }
@@ -48,8 +48,8 @@ namespace DungeonRising
             {
                 Height = height;
                 Width = width;
-                BoneGen Bone = new BoneGen(XSSR.xsr);
-                World = BoneGen.WallWrap(Bone.Generate(TilesetType.DEFAULT_DUNGEON, Height, Width));
+                BoneGen bone = new BoneGen(XSSR.xsr);
+                World = BoneGen.WallWrap(bone.Generate(TilesetType.DEFAULT_DUNGEON, Height, Width));
                 PairedWorld = new char[Height, Width * 2];
                 LogicWorld = new int[Height, Width];
             } while (!PlaceBones());
@@ -60,8 +60,8 @@ namespace DungeonRising
             {
                 Height = height;
                 Width = width;
-                BoneGen Bone = new BoneGen(XSSR.xsr);
-                World = BoneGen.WallWrap(Bone.Generate(tt, Height, Width));
+                BoneGen bone = new BoneGen(XSSR.xsr);
+                World = BoneGen.WallWrap(bone.Generate(tt, Height, Width));
                 PairedWorld = new char[Height, Width * 2];
                 LogicWorld = new int[Height, Width];
             } while (!PlaceBones());
@@ -116,42 +116,42 @@ namespace DungeonRising
 
                         if (q == 0xff)
                         {
-                            LogicWorld[y, x] = DARK; //(int)' '
+                            LogicWorld[y, x] = Dark; //(int)' '
                         }
                         else
                         {
-                            LogicWorld[y, x] = WALL;
+                            LogicWorld[y, x] = Wall;
                         }
                     }
                     else
                     {
-                        LogicWorld[y, x] = FLOOR;
+                        LogicWorld[y, x] = Floor;
                     }
                 }
             }
-            Entrance = LogicWorld.RandomMatch(FLOOR);
+            Entrance = LogicWorld.RandomMatch(Floor);
             if (Entrance.Y < 0) return false;
 
-            LogicWorld = LogicWorld.Surround(DARK);
+            LogicWorld = LogicWorld.Surround(Dark);
             World = World.Surround(' ');
             Height += 2;
             Width += 2;
 
-            Dijkstra Scanner = new Dijkstra(LogicWorld);
-            Scanner.Reset();
-            Scanner.SetGoal(Entrance.Y + 1, Entrance.X + 1);
-            Scanner.Scan();
+            Dijkstra scanner = new Dijkstra(LogicWorld);
+            scanner.Reset();
+            scanner.SetGoal(Entrance.Y + 1, Entrance.X + 1);
+            scanner.Scan();
             int floorCount = 0;
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    if (Scanner.CombinedMap[y, x] == DARK)
+                    if (scanner.CombinedMap[y, x] == Dark)
                     {
-                        LogicWorld[y, x] = DARK;
+                        LogicWorld[y, x] = Dark;
                         World[y, x] = ' ';
                     }
-                    else if (Scanner.CombinedMap[y, x] < FLOOR)
+                    else if (scanner.CombinedMap[y, x] < Floor)
                     {
                         ++floorCount;
                     }
@@ -163,16 +163,16 @@ namespace DungeonRising
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    if (LogicWorld[y, x] == WALL)
+                    if (LogicWorld[y, x] == Wall)
                     {
-                        bool n = (y <= 0 || LogicWorld[y - 1, x] == WALL);
-                        bool ne = (y <= 0 || x >= Width - 1 || LogicWorld[y - 1, x + 1] == WALL || LogicWorld[y - 1, x + 1] == DARK);
-                        bool e = (x >= Width - 1 || LogicWorld[y, x + 1] == WALL);
-                        bool se = (y >= Height - 1 || x >= Width - 1 || LogicWorld[y + 1, x + 1] == WALL || LogicWorld[y + 1, x + 1] == DARK);
-                        bool s = (y >= Height - 1 || LogicWorld[y + 1, x] == WALL);
-                        bool sw = (y >= Height - 1 || x <= 0 || LogicWorld[y + 1, x - 1] == WALL || LogicWorld[y + 1, x - 1] == DARK);
-                        bool w = (x <= 0 || LogicWorld[y, x - 1] == WALL);
-                        bool nw = (y <= 0 || x <= 0 || LogicWorld[y - 1, x - 1] == WALL || LogicWorld[y - 1, x - 1] == DARK);
+                        bool n = (y <= 0 || LogicWorld[y - 1, x] == Wall);
+                        bool ne = (y <= 0 || x >= Width - 1 || LogicWorld[y - 1, x + 1] == Wall || LogicWorld[y - 1, x + 1] == Dark);
+                        bool e = (x >= Width - 1 || LogicWorld[y, x + 1] == Wall);
+                        bool se = (y >= Height - 1 || x >= Width - 1 || LogicWorld[y + 1, x + 1] == Wall || LogicWorld[y + 1, x + 1] == Dark);
+                        bool s = (y >= Height - 1 || LogicWorld[y + 1, x] == Wall);
+                        bool sw = (y >= Height - 1 || x <= 0 || LogicWorld[y + 1, x - 1] == Wall || LogicWorld[y + 1, x - 1] == Dark);
+                        bool w = (x <= 0 || LogicWorld[y, x - 1] == Wall);
+                        bool nw = (y <= 0 || x <= 0 || LogicWorld[y - 1, x - 1] == Wall || LogicWorld[y - 1, x - 1] == Dark);
 
                         if (n)
                         {
@@ -263,7 +263,7 @@ namespace DungeonRising
                     }
                     else
                     {
-                        if (LogicWorld[y, x] == DARK)
+                        if (LogicWorld[y, x] == Dark)
                         {
                             World[y, x] = ' ';
                         }
@@ -280,10 +280,10 @@ namespace DungeonRising
                     {
                         if (World[y - 1, x] == '┼' || World[y - 1, x] == '├' || World[y - 1, x] == '┤' || World[y - 1, x] == '┬')
                         {
-                            if ((y <= 0 || x >= Width - 1 || LogicWorld[y - 1, x + 1] == WALL || LogicWorld[y - 1, x + 1] == DARK) &&
-                             (y <= 0 || x <= 0 || LogicWorld[y - 1, x - 1] == WALL || LogicWorld[y - 1, x - 1] == DARK) &&
-                             (y <= 0 || x >= Width - 1 || LogicWorld[y, x + 1] == WALL || LogicWorld[y, x + 1] == DARK) &&
-                             (y <= 0 || x <= 0 || LogicWorld[y, x - 1] == WALL || LogicWorld[y, x - 1] == DARK))
+                            if ((y <= 0 || x >= Width - 1 || LogicWorld[y - 1, x + 1] == Wall || LogicWorld[y - 1, x + 1] == Dark) &&
+                             (y <= 0 || x <= 0 || LogicWorld[y - 1, x - 1] == Wall || LogicWorld[y - 1, x - 1] == Dark) &&
+                             (y <= 0 || x >= Width - 1 || LogicWorld[y, x + 1] == Wall || LogicWorld[y, x + 1] == Dark) &&
+                             (y <= 0 || x <= 0 || LogicWorld[y, x - 1] == Wall || LogicWorld[y, x - 1] == Dark))
                             {
                                 switch (World[y, x])
                                 {
@@ -331,10 +331,10 @@ namespace DungeonRising
                     {
                         if (World[y, x - 1] == '┼' || World[y, x - 1] == '├' || World[y, x - 1] == '┬' || World[y, x - 1] == '┴')
                         {
-                            if ((y >= Height - 1 || x >= Width - 1 || LogicWorld[y + 1, x - 1] == WALL || LogicWorld[y + 1, x - 1] == DARK) &&
-                                                         (y <= 0 || x <= 0 || LogicWorld[y - 1, x - 1] == WALL || LogicWorld[y - 1, x - 1] == DARK) &&
-                                                         (y >= Height - 1 || LogicWorld[y + 1, x] == WALL || LogicWorld[y + 1, x] == DARK) &&
-                                                         (y <= 0 || LogicWorld[y - 1, x] == WALL || LogicWorld[y - 1, x] == DARK))
+                            if ((y >= Height - 1 || x >= Width - 1 || LogicWorld[y + 1, x - 1] == Wall || LogicWorld[y + 1, x - 1] == Dark) &&
+                                                         (y <= 0 || x <= 0 || LogicWorld[y - 1, x - 1] == Wall || LogicWorld[y - 1, x - 1] == Dark) &&
+                                                         (y >= Height - 1 || LogicWorld[y + 1, x] == Wall || LogicWorld[y + 1, x] == Dark) &&
+                                                         (y <= 0 || LogicWorld[y - 1, x] == Wall || LogicWorld[y - 1, x] == Dark))
                             {
                                 switch (World[y, x])
                                 {

@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using C5;
+//using C5;
 
 namespace DungeonRising
 {
     public static class Extensions
     {
         //private static XSRandom XSSR = new XSRandom();
-        public static T RandomElement<T>(this IEnumerable<T> list)
+        public static T RandomElement<T>(this IEnumerable<T> coll)
         {
-            if (list.Count() == 0)
+            var list = coll.ToList();
+            if (!list.Any())
                 return default(T);
             int idx = 0, tgt = XSSR.Next(list.Count());
             foreach (T t in list)
@@ -26,12 +28,12 @@ namespace DungeonRising
         }
         public static int FindByIndex<T>(this List<T> list, T target)
         {
-            if (list.Count() == 0)
+            if (!list.Any())
                 return -1;
-            int idx = 0;
-            foreach (T t in list)
+            var idx = 0;
+            foreach (var t in list)
             {
-                if (target.Equals(list[idx]))
+                if (target.Equals(t))
                 {
                     return idx;
                 }
@@ -185,7 +187,7 @@ namespace DungeonRising
             }
             if (frustration >= 20)
             {
-                ArrayList<int> iii = new ArrayList<int>(span0 * span1), jjj = new ArrayList<int>(span0 * span1);
+                List<int> iii = new List<int>(span0 * span1), jjj = new List<int>(span0 * span1);
                 for (int i = 0; i < span0; i++ )
                 {
                     for(int j = 0; j < span1; j++)
@@ -197,7 +199,7 @@ namespace DungeonRising
                         }
                     }
                 }
-                if(iii.IsEmpty)
+                if(iii.Count == 0)
                     return new Position(-1, -1);
                 else
                 {
@@ -338,7 +340,7 @@ namespace DungeonRising
             }
             return dupe;
         }
-        public static void AddAll<K, V>(this Dictionary<K, V> dict, Dictionary<K, V> items)
+        public static void AddAll<TK, TV>(this Dictionary<TK, TV> dict, Dictionary<TK, TV> items)
         {
             foreach (var kv in items)
             {
@@ -346,30 +348,18 @@ namespace DungeonRising
             }
 
         }
-        public static void UpdateAll<K, V>(this HashDictionary<K, V> dict, HashDictionary<K, V> items)
+        public static void UpdateAll<TK, TV>(this Dictionary<TK, TV> dict, IEnumerable<KeyValuePair<TK, TV>> items)
         {
             foreach (var kv in items)
             {
                 dict[kv.Key] = kv.Value;
             }
         }
-        public static Dictionary<K, V> Replicate<K, V>(this Dictionary<K, V> dict)
+        public static Dictionary<TK, TV> Replicate<TK, TV>(this Dictionary<TK, TV> dict)
         {
-            Dictionary<K, V> d = new Dictionary<K, V>();
+            Dictionary<TK, TV> d = new Dictionary<TK, TV>();
             d.AddAll(dict);
             return d;
-        }
-
-        public static HashDictionary<K, V> Replicate<K, V>(this HashDictionary<K, V> dict)
-        {
-            HashDictionary<K, V> d = new HashDictionary<K, V>();
-            d.AddAll(dict);
-            return d;
-        }
-
-        public static bool ContainsKey<K, V>(this HashDictionary<K, V> dict, K key)
-        {
-            return dict.Contains(key);
         }
 
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using C5;
+//using C5;
 
 namespace DungeonRising
 {
@@ -22,10 +22,7 @@ namespace DungeonRising
         public Schedule Initiative { get; set; }
         public long TurnsLeft { get; set; }
         public ulong[] XSSRState;
-        public State()
-        {
-
-        }
+        
         public State Fix()
         {
             XSSR.SetState(XSSRState);
@@ -36,7 +33,6 @@ namespace DungeonRising
 
             foreach (Entity e in Entities)
             {
-                Dijkstra dummy = e.Seeker;
                 e.Seeker.CombinedMap = Dijkstra.PhysicalMap.Replicate();
 //                e.Seeker.SetGoal(e.Pos.Y, e.Pos.X);
 //                e.Seeker.Scan();
@@ -47,14 +43,14 @@ namespace DungeonRising
         {
             State s = new State();
             s.DungeonStart = DungeonStart.Replicate();
-            s.Entities = Entities.Replicate();
+            s.Entities = Entities;
             s.CurrentActor = CurrentActor;
             s.StepsLeft = StepsLeft;
             s.StepsTaken = StepsTaken;
             s.Cursor = Cursor;
             s.Camera = Camera;
             s.CurrentReason = CurrentReason;
-            s.Initiative = new Schedule(Initiative.scheduled);
+            s.Initiative = new Schedule(Initiative.Scheduled);
             s.TurnsLeft = TurnsLeft;
             s.XSSRState = new ulong[] { XSSRState[0], XSSRState[1] };
             return s;
@@ -69,7 +65,6 @@ namespace DungeonRising
         {
             foreach (Entity e in S.Entities)
             {
-
                 S.Initiative.AddTurn(e.Name, e.Delay);
                 S.TurnsLeft += e.Stats.ActSpeed;
             }

@@ -2,7 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using C5;
+//using C5;
 namespace DungeonRising
 {
     [Serializable]
@@ -35,73 +35,82 @@ namespace DungeonRising
     
     public class Schedule
     {
-        public SortedArray<Turn> scheduled { get; set; }
+        public SortedList<double, string> Scheduled { get; set; }
         public Schedule()
         {
-            scheduled = new SortedArray<Turn>(512);
+            Scheduled = new SortedList<double, string>(512);
         }
-        public Schedule(SortedArray<Turn> existing)
+        public Schedule(SortedList<double, string> existing)
         {
-            scheduled = new SortedArray<Turn>(existing.Count);
-            foreach(Turn t in existing)
+            Scheduled = new SortedList<double, string>(existing.Count);
+            foreach(var t in existing)
             {
-                scheduled.Add(t.Replicate());
+                AddTurn(t.Value, t.Key);
             }
         }
+
         public void AddTurn(string actor, double delay)
         {
-            scheduled.Add(new Turn(actor, delay));
+            double altDelay = delay;
+            do
+            {
+                if (Scheduled.ContainsKey(altDelay))
+                    altDelay += 0.001;
+                else
+                {
+                    Scheduled.Add(altDelay, actor);
+                    break;
+                }
+            } while (true);
         }
+
         public void AddTurn(Turn turn)
         {
-            scheduled.Add(turn);
+            AddTurn(turn.Actor, turn.Delay);
         }
         public void RemoveTurn(Turn turn)
         {
-            if(scheduled.Contains(turn))
+            if(Scheduled.ContainsKey(turn.Delay))
             {
-                scheduled.Remove(turn);
+                Scheduled.Remove(turn.Delay);
             }
         }
         public Turn NextTurn()
         {
-            Turn nxt = scheduled.DeleteMin();
-
-            foreach (Turn t in scheduled)
+            double nxt = Scheduled.Keys[0];
+            Turn tr = new Turn(Scheduled[nxt], nxt);
+            Scheduled.RemoveAt(0);
+            SortedList<double, string> altScheduled = new SortedList<double, string>(Scheduled.Count);
+            foreach (var t in Scheduled)
             {
-                t.Delay -= nxt.Delay;
+                altScheduled.Add(t.Key - nxt, t.Value);
             }
-            return nxt;
-        }
-        public Turn PreviousTurn(Turn undo)
-        {
-            Turn prev = scheduled.FindMin();
-            foreach (Turn t in scheduled)
-            {
-                t.Delay += undo.Delay;
-            }
-            scheduled.Add(undo);
-            return prev;
+            Scheduled = altScheduled;
+            return tr;
         }
         public Turn PeekTurn()
         {
-            return scheduled.FindMin();
+            double nxt = Scheduled.Keys[0];
+            return new Turn(Scheduled[nxt], nxt);
         }
         public void CancelTurn(string cancelled)
         {
-            SortedArray<Turn> sched2 = new SortedArray<Turn>();
-            foreach (Turn t in scheduled)
+            SortedList<double, string> sched2 = new SortedList<double, string>(Scheduled.Count);
+            foreach (var t in Scheduled)
             {
-                if (t.Actor != cancelled)
+                if (t.Value != cancelled)
                 {
-                    sched2.Add(t);
+                    sched2.Add(t.Key, t.Value);
                 }
             }
-            scheduled = sched2;
+            Scheduled = sched2;
         }
         public void ReverseCancelTurn(IEnumerable<Turn> turns)
         {
-            scheduled.AddAll(turns);
+            foreach (var t in turns)
+            {
+                AddTurn(t);
+            }
         }
     }
 }

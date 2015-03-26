@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using C5;
+//using C5;
 namespace DungeonRising
 {
     [Serializable]
@@ -13,7 +13,7 @@ namespace DungeonRising
         [NonSerialized]
         public int[,] CombinedMap;
         public static int Height, Width;
-        public ArrayList<Position> Path;
+        public List<Position> Path;
         public static int[][] DirShuffledY = new int[][]
             {
                 new int[]{ -1, 0, 1, 0},
@@ -75,63 +75,63 @@ namespace DungeonRising
                 new int[]{ -1, 1, 0, 0},
                 
             };
-        private const int GOAL = 0;
-        public HashDictionary<int, int> goals, allies, obstacles, enemies;
-        private HashDictionary<int, int> fresh, closed, open;
+        private const int Goal = 0;
+        public Dictionary<int, int> Goals, Allies, Obstacles, Enemies;
+        private Dictionary<int, int> _fresh, _closed, _open;
         public static XSRandom Rand;
-        private static int frustration = 0;
+        private static int _frustration = 0;
 
         public Dijkstra()
         {
             Rand = new XSRandom();
-            Path = new ArrayList<Position>();
+            Path = new List<Position>();
 
-            goals = new HashDictionary<int, int>();
-            fresh = new HashDictionary<int, int>();
-            allies = new HashDictionary<int, int>();
-            enemies = new HashDictionary<int, int>();
-            obstacles = new HashDictionary<int, int>();
-            closed = new HashDictionary<int, int>();
-            open = new HashDictionary<int, int>();
+            Goals = new Dictionary<int, int>();
+            _fresh = new Dictionary<int, int>();
+            Allies = new Dictionary<int, int>();
+            Enemies = new Dictionary<int, int>();
+            Obstacles = new Dictionary<int, int>();
+            _closed = new Dictionary<int, int>();
+            _open = new Dictionary<int, int>();
         }
         public Dijkstra(int[,] level)
         {
             Rand = new XSRandom();
             CombinedMap = level.Replicate();
             PhysicalMap = level.Replicate();
-            Path = new ArrayList<Position>();
+            Path = new List<Position>();
             
             Height = PhysicalMap.GetLength(0);
             Width = PhysicalMap.GetLength(1);
-            goals = new HashDictionary<int, int>();
-            fresh = new HashDictionary<int, int>();
-            allies = new HashDictionary<int, int>();
-            enemies = new HashDictionary<int, int>();
-            obstacles = new HashDictionary<int, int>();
-            closed = new HashDictionary<int, int>();
-            open = new HashDictionary<int, int>();
+            Goals = new Dictionary<int, int>();
+            _fresh = new Dictionary<int, int>();
+            Allies = new Dictionary<int, int>();
+            Enemies = new Dictionary<int, int>();
+            Obstacles = new Dictionary<int, int>();
+            _closed = new Dictionary<int, int>();
+            _open = new Dictionary<int, int>();
         }
         public void Reset()
         {
             CombinedMap = PhysicalMap.Replicate();
-            goals.Clear();
+            Goals.Clear();
             Path.Clear();
         }
         public void SetGoal(int y, int x)
         {
-            if (PhysicalMap[y, x] > Dungeon.FLOOR)
+            if (PhysicalMap[y, x] > Dungeon.Floor)
             {
                 return;
             }
-            if (allies.Contains(y * Width + x))
-                allies.Remove(y * Width + x);
-            if (obstacles.Contains(y * Width + x))
-                obstacles.Remove(y * Width + x);
-            goals[y * Width + x] = GOAL;
+            if (Allies.ContainsKey(y * Width + x))
+                Allies.Remove(y * Width + x);
+            if (Obstacles.ContainsKey(y * Width + x))
+                Obstacles.Remove(y * Width + x);
+            Goals[y * Width + x] = Goal;
         }
         public void SetOccupied(int y, int x)
         {
-            CombinedMap[y, x] = Dungeon.WALL;
+            CombinedMap[y, x] = Dungeon.Wall;
         }
         public void ResetCell(int y, int x)
         {
@@ -139,35 +139,35 @@ namespace DungeonRising
         }
         public void RemoveAlly(Position pos)
         {
-            if (allies.Contains(pos.Y * Width + pos.X))
+            if (Allies.ContainsKey(pos.Y * Width + pos.X))
             {
-                allies.Remove(pos.Y * Width + pos.X);
+                Allies.Remove(pos.Y * Width + pos.X);
             }
         }
         public void UpdateAlly(Position start, Position end)
         {
-            if (allies.Contains(start.Y * Width + start.X))
+            if (Allies.ContainsKey(start.Y * Width + start.X))
             {
-                allies.Remove(start.Y * Width + start.X);
+                Allies.Remove(start.Y * Width + start.X);
             }
-            allies[end.Y * Width + end.X] = Dungeon.WALL;
+            Allies[end.Y * Width + end.X] = Dungeon.Wall;
         }
         public void AddAlly(Position pos)
         {
-            allies[pos.Y * Width + pos.X] = Dungeon.WALL;
+            Allies[pos.Y * Width + pos.X] = Dungeon.Wall;
         }
         public void AddAllies(IEnumerable<Position> friends)
         {
             foreach (Position pos in friends)
             {
-                allies[pos.Y * Width + pos.X] = Dungeon.WALL;
+                Allies[pos.Y * Width + pos.X] = Dungeon.Wall;
             }
         }
         public void RemoveAllies(IEnumerable<Position> friends)
         {
             foreach (Position pos in friends)
             {
-                allies.Remove(pos.Y * Width + pos.X);
+                Allies.Remove(pos.Y * Width + pos.X);
             }
         }
 
@@ -176,79 +176,79 @@ namespace DungeonRising
 
         public void RemoveEnemy(Position pos)
         {
-            if (obstacles.Contains(pos.Y * Width + pos.X))
+            if (Obstacles.ContainsKey(pos.Y * Width + pos.X))
             {
-                obstacles.Remove(pos.Y * Width + pos.X);
+                Obstacles.Remove(pos.Y * Width + pos.X);
             }
-            if (enemies.Contains(pos.Y * Width + pos.X))
+            if (Enemies.ContainsKey(pos.Y * Width + pos.X))
             {
-                enemies.Remove(pos.Y * Width + pos.X);
+                Enemies.Remove(pos.Y * Width + pos.X);
             }
         }
         public void RemoveEnemies(IEnumerable<Position> blocks)
         {
             foreach (Position pos in blocks)
             {
-                if (obstacles.Contains(pos.Y * Width + pos.X))
-                    obstacles.Remove(pos.Y * Width + pos.X);
-                if (enemies.Contains(pos.Y * Width + pos.X))
-                    enemies.Remove(pos.Y * Width + pos.X);
+                if (Obstacles.ContainsKey(pos.Y * Width + pos.X))
+                    Obstacles.Remove(pos.Y * Width + pos.X);
+                if (Enemies.ContainsKey(pos.Y * Width + pos.X))
+                    Enemies.Remove(pos.Y * Width + pos.X);
             }
         }
         public void UpdateEnemy(Position start, Position end)
         {
-            if (obstacles.Contains(start.Y * Width + start.X))
+            if (Obstacles.ContainsKey(start.Y * Width + start.X))
             {
-                obstacles.Remove(start.Y * Width + start.X);
+                Obstacles.Remove(start.Y * Width + start.X);
             }
 
-            if (enemies.Contains(start.Y * Width + start.X))
+            if (Enemies.ContainsKey(start.Y * Width + start.X))
             {
-                enemies.Remove(start.Y * Width + start.X);
+                Enemies.Remove(start.Y * Width + start.X);
             }
-            obstacles[end.Y * Width + end.X] = Dungeon.WALL;
-            enemies[end.Y * Width + end.X] = Dungeon.WALL;
+            Obstacles[end.Y * Width + end.X] = Dungeon.Wall;
+            Enemies[end.Y * Width + end.X] = Dungeon.Wall;
         }
-        public ArrayList<Position> AdjacentToEnemy(Position pos)
+        public List<Position> AdjacentToEnemy(Position pos)
         {
-            ArrayList<Position> adjacent = new ArrayList<Position>();
-            if (enemies.Contains((pos.Y) * Width + (pos.X + 1)))
+            List<Position> adjacent = new List<Position>();
+            if (Enemies.ContainsKey((pos.Y) * Width + (pos.X + 1)))
                 adjacent.Add(new Position(pos.Y, pos.X + 1));
-            if (enemies.Contains((pos.Y) * Width + (pos.X - 1)))
+            if (Enemies.ContainsKey((pos.Y) * Width + (pos.X - 1)))
                 adjacent.Add(new Position(pos.Y, pos.X - 1));
-            if (enemies.Contains((pos.Y + 1) * Width + (pos.X)))
+            if (Enemies.ContainsKey((pos.Y + 1) * Width + (pos.X)))
                 adjacent.Add(new Position(pos.Y + 1, pos.X));
-            if (enemies.Contains((pos.Y - 1) * Width + (pos.X)))
+            if (Enemies.ContainsKey((pos.Y - 1) * Width + (pos.X)))
                 adjacent.Add(new Position(pos.Y - 1, pos.X));
 
             return adjacent;
         }
         public void AddEnemy(Position pos)
         {
-            obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
-            enemies[pos.Y * Width + pos.X] = Dungeon.WALL;
+            Obstacles[pos.Y * Width + pos.X] = Dungeon.Wall;
+            Enemies[pos.Y * Width + pos.X] = Dungeon.Wall;
         }
         public void AddEnemies(IEnumerable<Position> blocks)
         {
             foreach (Position pos in blocks)
             {
-                obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
-                enemies[pos.Y * Width + pos.X] = Dungeon.WALL;
+                Obstacles[pos.Y * Width + pos.X] = Dungeon.Wall;
+                Enemies[pos.Y * Width + pos.X] = Dungeon.Wall;
             }
         }
-        public void SetEnemies(HashDictionary<int, int> other)
+        public void SetEnemies(Dictionary<int, int> other)
         {
-            enemies = other.Replicate();
-            obstacles = other.Replicate();
+            Enemies = other.Replicate();
+            Obstacles = other.Replicate();
         }
         public void SetEnemies(IEnumerable<Position> blocks)
         {
-            obstacles.Clear();
-            enemies.Clear();
+            Obstacles.Clear();
+            Enemies.Clear();
             foreach (Position pos in blocks)
             {
-                obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
-                enemies[pos.Y * Width + pos.X] = Dungeon.WALL;
+                Obstacles[pos.Y * Width + pos.X] = Dungeon.Wall;
+                Enemies[pos.Y * Width + pos.X] = Dungeon.Wall;
             }
         }
 
@@ -256,111 +256,111 @@ namespace DungeonRising
 
         public void RemoveObstacle(Position pos)
         {
-            if (obstacles.Contains(pos.Y * Width + pos.X))
+            if (Obstacles.ContainsKey(pos.Y * Width + pos.X))
             {
-                obstacles.Remove(pos.Y * Width + pos.X);
+                Obstacles.Remove(pos.Y * Width + pos.X);
             }
         }
         public void RemoveObstacles(IEnumerable<Position> blocks)
         {
             foreach (Position pos in blocks)
             {
-                obstacles.Remove(pos.Y * Width + pos.X);
+                Obstacles.Remove(pos.Y * Width + pos.X);
             }
         }
         public void UpdateObstacle(Position start, Position end)
         {
-            if (obstacles.Contains(start.Y * Width + start.X))
+            if (Obstacles.ContainsKey(start.Y * Width + start.X))
             {
-                obstacles.Remove(start.Y * Width + start.X);
+                Obstacles.Remove(start.Y * Width + start.X);
             }
-            obstacles[end.Y * Width + end.X] = Dungeon.WALL;
+            Obstacles[end.Y * Width + end.X] = Dungeon.Wall;
         }
 
         public void AddObstacle(Position pos)
         {
-            obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+            Obstacles[pos.Y * Width + pos.X] = Dungeon.Wall;
         }
         public void AddObstacles(IEnumerable<Position> blocks)
         {
             foreach (Position pos in blocks)
             {
-                obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+                Obstacles[pos.Y * Width + pos.X] = Dungeon.Wall;
             }
         }
-        public void SetObstacles(HashDictionary<int, int> other)
+        public void SetObstacles(Dictionary<int, int> other)
         {
-            obstacles = other.Replicate();
+            Obstacles = other.Replicate();
         }
         public void SetObstacles(IEnumerable<Position> blocks)
         {
-            obstacles.Clear();
+            Obstacles.Clear();
             foreach (Position pos in blocks)
             {
-                obstacles[pos.Y * Width + pos.X] = Dungeon.WALL;
+                Obstacles[pos.Y * Width + pos.X] = Dungeon.Wall;
             }
         }
         protected void SetFresh(int y, int x, int counter)
         {
             CombinedMap[y, x] = counter;
-            fresh.Add(y * Width + x, counter);
+            _fresh.Add(y * Width + x, counter);
         }
         protected void SetFresh(int index, int counter)
         {
             CombinedMap[index / Width, index % Width] = counter;
-            fresh.Add(index, counter);
+            _fresh.Add(index, counter);
         }
         public int[,] Scan()
         {
             CombinedMap = PhysicalMap.Replicate();
-            closed.UpdateAll(enemies);
+            _closed.UpdateAll(Enemies);
 //            closed.AddAll(allies);
             for(int y = 0; y < Height; y++)
             {
                 for(int x = 0; x < Width; x++)
                 {
-                    if (CombinedMap[y, x] > Dungeon.FLOOR)
-                        closed[y * Width + x] = PhysicalMap[y, x];
+                    if (CombinedMap[y, x] > Dungeon.Floor)
+                        _closed[y * Width + x] = PhysicalMap[y, x];
                 }
             }
-            foreach(var kv in goals)
+            foreach(var kv in Goals)
             {
-                CombinedMap[kv.Key / Width, kv.Key % Width] = GOAL;
+                CombinedMap[kv.Key / Width, kv.Key % Width] = Goal;
             }
-            int numAssigned = goals.Count;
+            int numAssigned = Goals.Count;
             int iter = 0;
-            open.UpdateAll(goals);
+            _open.UpdateAll(Goals);
             int[] dirs = { -Width, 1, Width, -1 };
             while(numAssigned > 0)
             {
                 ++iter;
                 numAssigned = 0;
 
-                foreach (var cell in open)
+                foreach (var cell in _open)
                 {
                     for (int d = 0; d < 4; d++)
                     {
-                        if (!closed.ContainsKey(cell.Key + dirs[d]) && !open.ContainsKey(cell.Key + dirs[d]) && CombinedMap.GetIndex(cell.Key, Width) + 1 < CombinedMap.GetIndex(cell.Key + dirs[d], Width))
+                        if (!_closed.ContainsKey(cell.Key + dirs[d]) && !_open.ContainsKey(cell.Key + dirs[d]) && CombinedMap.GetIndex(cell.Key, Width) + 1 < CombinedMap.GetIndex(cell.Key + dirs[d], Width))
                         {
                             SetFresh(cell.Key + dirs[d], iter);
                             ++numAssigned;
                         }
                     }
                 }
-                closed.UpdateAll(open);
-                open = fresh.Replicate();
-                fresh.Clear();
+                _closed.UpdateAll(_open);
+                _open = _fresh.Replicate();
+                _fresh.Clear();
             }
-            closed.Clear();
-            open.Clear();
+            _closed.Clear();
+            _open.Clear();
 
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    if(CombinedMap[y,x] == Dungeon.FLOOR)
+                    if(CombinedMap[y,x] == Dungeon.Floor)
                     {
-                        CombinedMap[y, x] = Dungeon.DARK;
+                        CombinedMap[y, x] = Dungeon.Dark;
                     }
                 }
             }
@@ -368,10 +368,10 @@ namespace DungeonRising
             return CombinedMap;
         }
 
-        public ArrayList<Position> GetPath(Position start, Position goal, int length)
+        public List<Position> GetPath(Position start, Position goal, int length)
         {
-            Path = new ArrayList<Position>();
-            if (CombinedMap[goal.Y, goal.X] > Dungeon.FLOOR)
+            Path = new List<Position>();
+            if (CombinedMap[goal.Y, goal.X] > Dungeon.Floor)
             {
                 return Path;
             }
@@ -381,15 +381,15 @@ namespace DungeonRising
 //            Path.Add(currentPos);
             while (CombinedMap[currentPos.Y, currentPos.X] > 0)
             {
-                if (frustration > 500)
+                if (_frustration > 500)
                 {
-                    Path = new ArrayList<Position>();
-                    frustration = 0;
-                    foreach (var kv in goals)
+                    Path = new List<Position>();
+                    _frustration = 0;
+                    foreach (var kv in Goals)
                     {
                         ResetCell(kv.Key / Width, kv.Key % Width);
                     }
-                    goals.Clear();
+                    Goals.Clear();
                     return Path;
                 } int best = 9999, choice = 0, whichOrder = Rand.Next(24);
                 int[] dirsY = DirShuffledY[whichOrder], dirsX = DirShuffledX[whichOrder];
@@ -403,36 +403,36 @@ namespace DungeonRising
                 }
                 if(best >= 9999)
                 {
-                    frustration = 0;
-                    Path = new ArrayList<Position>();
+                    _frustration = 0;
+                    Path = new List<Position>();
                     return Path;
                 }
                 currentPos.Y += dirsY[choice];
                 currentPos.X += dirsX[choice];
                 Path.Add(currentPos);
-                frustration++;
+                _frustration++;
                 if (Path.Count >= length)
                 {
-                    if(allies.Contains(currentPos.Y * Width + currentPos.X))
+                    if(Allies.ContainsKey(currentPos.Y * Width + currentPos.X))
                     {
-                        closed.AddAll(allies);
+                        _closed.AddAll(Allies);
                         Scan();
                         return GetPath(start, goal, length);
                     }
-                    foreach (var kv in goals)
+                    foreach (var kv in Goals)
                     {
                         ResetCell(kv.Key / Width, kv.Key % Width);
                     }
-                    goals.Clear();
+                    Goals.Clear();
                     return Path;
                 }
             }
-            frustration = 0;
-            foreach (var kv in goals)
+            _frustration = 0;
+            foreach (var kv in Goals)
             {
                 ResetCell(kv.Key / Width, kv.Key % Width);
             }
-            goals.Clear();
+            Goals.Clear();
             return Path;
         }
         /*

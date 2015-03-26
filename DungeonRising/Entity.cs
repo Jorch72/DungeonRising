@@ -1,5 +1,7 @@
 ﻿using System;
-using C5;
+//using C5;
+using System.Collections.Immutable;
+using ProdutiveRage.UpdateWith;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,29 +14,30 @@ namespace DungeonRising
     
     public class Entity : IEquatable<Entity>
     {
-        public Sheet Stats { get; set; }
-        public string Name { get; set; }
-        public Position Pos;
-        public char Left { get; set; }
-        public char Right { get; set; }
-        public Color Coloring { get; set; }
-        public int Faction { get; set; }
+        public Sheet Stats { get; private set; }
+        public string Name { get; private set; }
+        public Position Pos { get; private set; }
+        public char Left { get; private set; }
+        public char Right { get; private set; }
+        public Color Coloring { get; private set; }
+        public int Faction { get; private set; }
         public double Delay { get { return 36.0 / Stats.ActSpeed; } }
-        private Dijkstra _Seeker = null;
+        private Dijkstra _seeker = null;
         public Dijkstra Seeker
         {
             get
             {
-                if (_Seeker == null)
+                /*
+                 if (_seeker == null)
                 {
-                    _Seeker = new Dijkstra(Chariot.S.DungeonStart.LogicWorld);
-//                    _Seeker.SetGoal(Pos.Y, Pos.X);
-//                    _Seeker.Scan();
-                } return _Seeker;
+                    _seeker = new Dijkstra(Chariot.S.DungeonStart.LogicWorld);
+                }
+                 */
+                return _seeker;
             }
             set
             {
-                _Seeker = value;
+                _seeker = value;
             }
         }
         public bool Equivalent(Entity other)
@@ -42,6 +45,17 @@ namespace DungeonRising
             return other != null && Pos == other.Pos && Name == other.Name;
         }
 
+        public Entity(string name, Position pos, char left, char right, Color coloring, int faction, Sheet stats, Dijkstra seeker)
+        {
+            Name = name;
+            Pos = pos;
+            Left = left;
+            Right = right;
+            Coloring = coloring;
+            Faction = faction;
+            Stats = stats;
+            Seeker = seeker;
+        }
         public Entity(string representation, int y, int x)
         {
             Name = "";
@@ -115,61 +129,82 @@ namespace DungeonRising
             return Name.GetHashCode() ^ Pos.GetHashCode() ^ Stats.GetHashCode();
         }
 
-        public Entity Replicate()
+        public Entity UpdateWith(
+Optional<string> name = new Optional<string>(),
+Optional<Position> pos = new Optional<Position>(),
+Optional<char> left = new Optional<char>(),
+Optional<char> right = new Optional<char>(),
+Optional<Color> coloring = new Optional<Color>(),
+Optional<int> faction = new Optional<int>(),
+Optional<Sheet> stats = new Optional<Sheet>(),
+Optional<Dijkstra> seeker = new Optional<Dijkstra>())
         {
-            return new Entity(Name, "" + Left + Right, Coloring, Pos.Y, Pos.X, Faction, Stats.Replicate());
+            return DefaultUpdateWithHelper.GetGenerator<Entity>()(this, name, pos, left, right, coloring, faction, stats, seeker);
         }
-
+        public Entity UpdateStats(
+Optional<Gauge> health = new Optional<Gauge>(),
+Optional<int> damage = new Optional<int>(),
+Optional<int> moveSpeed = new Optional<int>(),
+Optional<int> actSpeed = new Optional<int>())
+        {
+            return UpdateWith(stats: Stats.UpdateWith(health, damage, moveSpeed, actSpeed));
+        }
+        public Entity UpdateKilledAction(Action whenKilled)
+        {
+            return UpdateWith(stats: Stats.UpdateKilledAction(whenKilled));
+        }
     }
 
     [Serializable]
     [JsonObjectAttribute]
     public class EntityDictionary : IEnumerable<Entity>
     {
-        public HashDictionary<string, Entity> byName { get; set; }
-        public HashDictionary<Position, Entity> byPosition { get; set; }
-        public int Count { get { return byName.Count; } }
+        public ImmutableDictionary<string, Entity> ByName { get; set; }
+        public ImmutableDictionary<Position, Entity> ByPosition { get; set; }
+        public int Count { get { return ByName.Count; } }
         public EntityDictionary()
         {
-            byName = new HashDictionary<string, Entity>();
-            byPosition = new HashDictionary<Position, Entity>();
+            ByName = ImmutableDictionary<string, Entity>.Empty;
+            ByPosition = ImmutableDictionary<Position, Entity>.Empty;
 
         }
         public bool Contains(Entity key)
         {
             if (key == null) return false;
-            return byName.ContainsKey(key.Name);
+            return ByName.ContainsKey(key.Name);
         }
         public bool ContainsExactly(Entity key)
         {
             if (key == null) return false;
-            return byName.ContainsKey(key.Name) && byName[key.Name].Equals(key);
+            return ByName.ContainsKey(key.Name) && ByName[key.Name].Equals(key);
         }
         public bool Contains(string key)
         {
-            return byName.ContainsKey(key);
+            return ByName.ContainsKey(key);
         }
         public bool Contains(int y, int x)
         {
-            return byPosition.ContainsKey(new Position(y, x));
+            return ByPosition.ContainsKey(new Position(y, x));
         }
         public bool Contains(Position p)
         {
-            return byPosition.ContainsKey(p);
+            return ByPosition.ContainsKey(p);
         }
         public void Add(Entity val)
         {
-            val.Stats.SetKilledHandler((o, ea) => Remove(val.Name));
-            byPosition.Add(val.Pos, val);
-            byName.Add(val.Name, val);
+            Entity v = val.UpdateKilledAction(() =>
+                Remove(val.Name));
+            ByPosition = ByPosition.Add(v.Pos, v);
+            ByName = ByName.Add(v.Name, v);
         }
 
         public void Add(string key, Entity val)
         {
-            val.Stats.SetKilledHandler((o, ea) => Remove(val.Name));
-            val.Name = key;
-            byPosition.Add(val.Pos, val);
-            byName.Add(key, val);
+            Entity v = val.UpdateKilledAction(() => 
+                Remove(val.Name));
+            v = v.UpdateWith(name: key);
+            ByPosition = ByPosition.Add(v.Pos, v);
+            ByName = ByName.Add(key, v);
         }
         public void AddAll(IEnumerable<Entity> vals)
         {
@@ -180,25 +215,16 @@ namespace DungeonRising
         }
         public void UpdateAll(IEnumerable<Entity> vals)
         {
-            foreach (var val in vals)
-            {
-                if(Contains(val))
-                {
-                    byName[val.Name] = val;
-                    byPosition[val.Pos] = val;
-                }
-                else
-                {
-                    Add(val);
-                }
-            }
+            ByName = ByName.SetItems(vals.ToImmutableDictionary(e => e.Name));
+            ByPosition = ByPosition.SetItems(vals.ToImmutableDictionary(e => e.Pos));
+            
         }
         public void Remove(string key)
         {
-            Entity e = byName[key];
-            byPosition.Remove(e.Pos);
-            byName.Remove(key);
-            foreach(var kv in byName)
+            Entity e = ByName[key];
+            ByPosition = ByPosition.Remove(e.Pos);
+            ByName = ByName.Remove(key);
+            foreach(var kv in ByName)
             {
                 kv.Value.Seeker.RemoveEnemy(e.Pos);
                 kv.Value.Seeker.RemoveAlly(e.Pos);
@@ -207,10 +233,10 @@ namespace DungeonRising
         }
         public void Remove(Position key)
         {
-            Entity e = byPosition[key];
-            byName.Remove(e.Name);
-            byPosition.Remove(key);
-            foreach (var kv in byName)
+            Entity e = ByPosition[key];
+            ByName = ByName.Remove(e.Name);
+            ByPosition = ByPosition.Remove(key);
+            foreach (var kv in ByName)
             {
                 kv.Value.Seeker.RemoveEnemy(e.Pos);
                 kv.Value.Seeker.RemoveAlly(e.Pos);
@@ -220,15 +246,15 @@ namespace DungeonRising
 
         public void Move(string key, int yMove, int xMove)
         {
-            if (!byName.ContainsKey(key) || byPosition.ContainsKey(new Position(byName[key].Pos.Y + yMove, byName[key].Pos.X + xMove)))
+            if (!ByName.ContainsKey(key) || ByPosition.ContainsKey(new Position(ByName[key].Pos.Y + yMove, ByName[key].Pos.X + xMove)))
                 return;
-            Entity e = byName[key];
+            Entity e = ByName[key];
             Position pos = e.Pos;
-            byPosition.Remove(pos);
-            byName.Remove(key);
+            ByPosition = ByPosition.Remove(pos);
+            ByName = ByName.Remove(key);
             e.Pos.Move(yMove, xMove);
             Add(key, e);
-            foreach (var kv in byName)
+            foreach (var kv in ByName)
             {
                 if (kv.Value.Faction == e.Faction)
                 {
@@ -247,15 +273,14 @@ namespace DungeonRising
         }
         public void MoveDirectly(string key, Position dest)
         {
-            if (!byName.ContainsKey(key) || byPosition.ContainsKey(dest))
+            if (!ByName.ContainsKey(key) || ByPosition.ContainsKey(dest))
                 return;
-            Entity e = byName[key];
+            Entity e = ByName[key];
             Position pos = e.Pos;
-            byPosition.Remove(pos);
-            byName.Remove(key);
-            e.Pos = dest;
-            Add(key, e);
-            foreach (var kv in byName)
+            ByPosition = ByPosition = ByPosition.Remove(pos);
+            ByName = ByName = ByName.Remove(key);
+            Add(key, e.UpdateWith(pos: dest));
+            foreach (var kv in ByName)
             {
                 if (kv.Value.Faction == e.Faction)
                 {
@@ -273,20 +298,26 @@ namespace DungeonRising
         }
         public int Step(string key)
         {
-            if (!byName.ContainsKey(key))
+            if (!ByName.ContainsKey(key))
                 return 0;
-            Entity e = byName[key];
+            Entity e = ByName[key];
             if (e.Seeker.Path == null || e.Seeker.Path.Count == 0)
                 return 0;
-            Position nxt = e.Seeker.Path.RemoveFirst();
+            Position nxt = e.Seeker.Path.First();
+            e.Seeker.Path.RemoveAt(0);
             MoveDirectly(key, nxt);
             return e.Seeker.Path.Count;
         }
 
         public void Attack(Position attackerKey, Position defenderKey)
         {
-            Entity attacker = byPosition[attackerKey], defender = byPosition[defenderKey];
-            defender.Stats.Health.Current -= attacker.Stats.Damage;
+            Entity attacker = ByPosition[attackerKey], defender = ByPosition[defenderKey];
+            Entity result = defender.UpdateStats(health: defender.Stats.Health - attacker.Stats.Damage);
+            if (ByPosition.ContainsKey(defenderKey))
+            {
+                ByPosition = ByPosition.SetItem(defenderKey, result);
+                ByName = ByName.SetItem(defender.Name, result);
+            }
         }
 
 
@@ -294,14 +325,14 @@ namespace DungeonRising
         {
             get
             {
-                return byName[key];
+                return ByName[key];
             }
             set
             {
                 Entity v = value;
-                v.Name = key;
-                byName[key] = v;
-                byPosition[v.Pos] = v;
+                v = v.UpdateWith(name: key);
+                ByName = ByName.SetItem(key, v);
+                ByPosition = ByPosition.SetItem(v.Pos, v);
             }
         }
         public Entity this[int y, int x]
@@ -309,61 +340,51 @@ namespace DungeonRising
             get
             {
                 Position p = new Position(y, x);
-                if(byPosition.ContainsKey(p))
-                    return byPosition[p];
+                if(ByPosition.ContainsKey(p))
+                    return ByPosition[p];
                 return null;
             }
             set
             {
                 if (value.Name == "") throw new ArgumentException("Entity.Name must not be empty.");
-                value.Pos.SetAll(y, x);
-                byPosition[value.Pos] = value;
-                byName[value.Name] = value;
+                Position p = new Position(y, x);
+                Entity v = value.UpdateWith(pos: p);
+                ByPosition = ByPosition.SetItem(p, v);
+                ByName = ByName.SetItem(v.Name, v);
             }
         }
         public Entity this[Position p]
         {
             get
             {
-                if (byPosition.ContainsKey(p))
-                    return byPosition[p];
+                if (ByPosition.ContainsKey(p))
+                    return ByPosition[p];
                 return null;
             }
             set
             {
                 if (value.Name == "") throw new ArgumentException("Entity.Name must not be empty.");
-                byPosition[p] = value;
-                byName[value.Name] = value;
+                ByPosition = ByPosition.SetItem(p, value);
+                ByName = ByName.SetItem(value.Name, value);
             }
         }
         IEnumerator<Entity> IEnumerable<Entity>.GetEnumerator()
         {
-            return byName.Values.GetEnumerator();
+            return ByName.Values.GetEnumerator();
         }
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return byName.Values.GetEnumerator();
+            return ByName.Values.GetEnumerator();
         }
         public Entity[] ToArray()
         {
-            return byName.Values.ToArray();
+            return ByName.Values.ToArray();
         }
-        public ArrayList<Entity> ToList()
+        public ImmutableList<Entity> ToList()
         {
-            ArrayList<Entity> ents = new ArrayList<Entity>();
-            ents.AddAll(this.byName.Values);
-            return ents;
+            return ByName.Values.ToImmutableList();
         }
 
-        public EntityDictionary Replicate()
-        {
-            EntityDictionary ed = new EntityDictionary();
-            foreach(Entity e in byName.Values)
-            {
-                ed.Add(e.Replicate());
-            }
-            return ed;
-        }
     }
 
 }
