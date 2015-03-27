@@ -18,39 +18,26 @@ namespace DungeonRising
         public int Damage { get; private set; }
         public int MoveSpeed { get; private set; }
         public int ActSpeed { get; private set; }
-        public Action WhenKilled { get; private set; }
-        private EventHandler Ozh = null;
+        
         public Sheet()
         {
 
         }
         public Sheet(int maxHealth, int damage, int moveSpeed, int actSpeed)
         {
-            WhenKilled = null;
             MoveSpeed = moveSpeed;
             ActSpeed = actSpeed;
-            Ozh = OnZeroHealth;
-            Health = new Gauge(maxHealth, maxHealth, Ozh);
+            Health = new Gauge(maxHealth, maxHealth);
             Damage = damage;
         }
-        public Sheet(Gauge health, int damage, int moveSpeed, int actSpeed, Action whenKilled)
+        public Sheet(Gauge health, int damage, int moveSpeed, int actSpeed)
         {
-            WhenKilled = whenKilled;
             MoveSpeed = moveSpeed;
             ActSpeed = actSpeed;
-            Ozh = OnZeroHealth;
             Health = health;
             Damage = damage;
         }
 
-        void OnZeroHealth(object sender, EventArgs e)
-        {
-            Action handler = WhenKilled;
-            if (handler != null)
-            {
-                handler();
-            }
-        }
 
         public bool Equals(Sheet other)
         {
@@ -59,13 +46,7 @@ namespace DungeonRising
 
         public Sheet Replicate()
         {
-            Sheet ret = new Sheet();
-            ret.Health = Health;
-            ret.Damage = Damage;
-            ret.WhenKilled = WhenKilled;
-            ret.ActSpeed = ActSpeed;
-            ret.MoveSpeed = MoveSpeed;
-            return ret;
+            return new Sheet(Health, Damage, MoveSpeed, ActSpeed);
         }
 
         public Sheet UpdateWith(
@@ -74,19 +55,13 @@ Optional<int> damage = new Optional<int>(),
 Optional<int> moveSpeed = new Optional<int>(),
 Optional<int> actSpeed = new Optional<int>())
         {
-            Gauge hp = health.GetValue(this.Health);
-            
-            return new Sheet(new Gauge(hp.Max, hp.Current, this.Ozh, true), damage.GetValue(this.Damage), moveSpeed.GetValue(this.MoveSpeed), actSpeed.GetValue(this.ActSpeed), this.WhenKilled);
-        }
-        public Sheet UpdateKilledAction(Action whenKilled)
-        {
-            return new Sheet(Health, Damage, MoveSpeed, ActSpeed, whenKilled);
+            return new Sheet(health.GetValue(this.Health), damage.GetValue(this.Damage), moveSpeed.GetValue(this.MoveSpeed), actSpeed.GetValue(this.ActSpeed));
         }
     }
     [Serializable]
     public struct Gauge
     {
-        public event EventHandler ReachedZero;
+//        public event EventHandler ReachedZero;
         private int _max;
         public int Max
         {
@@ -115,7 +90,6 @@ Optional<int> actSpeed = new Optional<int>())
                 {
                     _current = 0;
                     
-                    EventHandler handler = ReachedZero;
                     /*if(handler != null)
                     {
                         handler(this, EventArgs.Empty);
@@ -127,61 +101,36 @@ Optional<int> actSpeed = new Optional<int>())
                 }
             }
         }
+
         public Gauge(int max, int current)
         {
             _max = max;
             _current = (current >= _max) ? _max : current;
-            ReachedZero = null;
-        }
-        public Gauge(int max, int current, EventHandler reachedZero)
-        {
-            _max = max;
-            _current = (current >= _max) ? _max : current;
-            ReachedZero = reachedZero;
             if (_current <= 0)
             {
                 _current = 0;
-                if (ReachedZero != null)
-                {
-                    ReachedZero(this, EventArgs.Empty);
-                    ReachedZero = null;
-                }
-            }
-        }
-        public Gauge(int max, int current, EventHandler reachedZero, bool dormant)
-        {
-            _max = max;
-            _current = (current >= _max) ? _max : current;
-            ReachedZero = reachedZero;
-            if (_current <= 0)
-            {
-                _current = 0;
-                if (ReachedZero != null && !dormant)
-                {
-                    ReachedZero(this, EventArgs.Empty);
-                    ReachedZero = null;
-                }
+                //if (ReachedZero != null)
+                //{
+                //    ReachedZero(this, EventArgs.Empty);
+                //    ReachedZero = null;
+                //}
             }
         }
         public Gauge(int max)
         {
             _max = max;
             _current = max;
-            ReachedZero = null;
         }
         public static Gauge operator -(Gauge start, int amount)
         {
-            Gauge g = new Gauge(start.Max, start.Current - amount, start.ReachedZero);
+            Gauge g = new Gauge(start.Max, start.Current - amount);
             return g;
         }
         public static Gauge operator +(Gauge start, int amount)
         {
-            Gauge g = new Gauge(start.Max, start.Current + amount, start.ReachedZero);
+            Gauge g = new Gauge(start.Max, start.Current + amount);
             return g;
         }
-        public override int GetHashCode()
-        {
-            return (_max << 16) | _current;
-        }
+
     }
 }

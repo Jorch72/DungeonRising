@@ -140,7 +140,7 @@ namespace DungeonRising
             Dijkstra scanner = new Dijkstra(LogicWorld);
             scanner.Reset();
             scanner.SetGoal(Entrance.Y + 1, Entrance.X + 1);
-            scanner.Scan();
+            scanner.Scan(new Entity("Blubberrump Corndogg X-TREME", "  ", Entrance.Y + 1, Entrance.X + 1));
             int floorCount = 0;
             for (int y = 0; y < Height; y++)
             {
