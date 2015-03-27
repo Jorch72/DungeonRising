@@ -2,6 +2,8 @@
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+
 //using C5;
 namespace DungeonRising
 {
@@ -43,7 +45,15 @@ namespace DungeonRising
         public Schedule(SortedList<double, string> existing)
         {
             Scheduled = new SortedList<double, string>(existing.Count);
-            foreach(var t in existing)
+            foreach (var t in existing)
+            {
+                AddTurn(t.Value, t.Key);
+            }
+        }
+        public Schedule(ImmutableSortedDictionary<double, string> existing)
+        {
+            Scheduled = new SortedList<double, string>(existing.Count);
+            foreach (var t in existing)
             {
                 AddTurn(t.Value, t.Key);
             }
@@ -55,7 +65,7 @@ namespace DungeonRising
             do
             {
                 if (Scheduled.ContainsKey(altDelay))
-                    altDelay += 0.001;
+                    altDelay += 0.0002;
                 else
                 {
                     Scheduled.Add(altDelay, actor);

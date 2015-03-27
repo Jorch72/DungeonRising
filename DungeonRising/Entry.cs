@@ -62,6 +62,7 @@ namespace DungeonRising
         public Dijkstra Seeker;
         public XSRandom VisualRandom;
         public Dictionary<string, bool> BeingDamaged;
+        public string message = "";
         private Stopwatch _timer;
         private long _now;
         public static string IconGlyphs = "ሀሁሂሃሄህሆሇለሉሊላሌልሎሏሐሑሒሓሔሕሖሗመሙሚማሜ";
@@ -100,27 +101,31 @@ namespace DungeonRising
                     s.Entities.Add(baddie);
                 }
             }
-            foreach(Entity ent in s.Entities)
+            foreach(var k in s.Entities.NameToEntity.Keys)
             {
-                ent.Seeker.AddEnemies(s.Entities.ByPosition.Keys);
-                ent.Seeker.RemoveEnemies(s.Entities.ByPosition.Where(kv => kv.Value.Faction == ent.Faction).Select(e => e.Key));
-                ent.Seeker.AddAllies(s.Entities.ByPosition.Keys);
-                ent.Seeker.RemoveAllies(s.Entities.ByPosition.Where(kv => kv.Value.Faction != ent.Faction).Select(e => e.Key));
+                IEnumerable<Position> foes =
+                    s.Entities.NameToEntity.Where(kv => kv.Value.Faction != s.Entities[k].Faction)
+                        .Select(e => e.Value.Pos);
+                s.Entities[k] = s.Entities[k].AddEnemies(foes);
+                IEnumerable<Position> friends =
+                    s.Entities.NameToEntity.Where(kv => kv.Value.Faction == s.Entities[k].Faction)
+                        .Select(e => e.Value.Pos);
+                s.Entities[k] = s.Entities[k].AddAllies(friends);
+
             }
             s.StepsTaken = 0;
             s.XSSRState = XSSR.GetState();
-            Chariot.S = s;
+            H.S = s;
 
-            Chariot.ResetInitiative();
-            Entity first = Chariot.S.Entities[Chariot.S.Initiative.PeekTurn().Actor];
+            H.ResetInitiative();
+            Entity first = H.S.Entities[H.S.Initiative.PeekTurn().Actor];
             if (first.Faction == 0)
             {
                 Seeker.SetGoal(first.Pos.Y, first.Pos.X);
-                Seeker.SetEnemies(first.Seeker.Enemies);
-                Seeker.Scan();
+                Seeker.Scan(first);
 
-                Chariot.S.CurrentReason = WaitReason.Receiving;
-                Chariot.Remember();
+                H.S.CurrentReason = WaitReason.Receiving;
+                H.Remember();
             }
 
 
@@ -128,8 +133,8 @@ namespace DungeonRising
         }
         public Entry(State state)
         {
-            Chariot.S = state;
-            Seeker = new Dijkstra(Chariot.S.DungeonStart.LogicWorld);
+            H.S = state;
+            Seeker = new Dijkstra(H.S.DungeonStart.LogicWorld);
             VisualRandom = new XSRandom();
         }
         public static Entry Self = null;
@@ -192,7 +197,7 @@ namespace DungeonRising
             
             if (Input == Terminal.TK_LBRACKET || Input == Terminal.TK_ESCAPE)
             {
-                Chariot.Backward();
+                H.Backward();
                 return;
             }
             _now = _timer.ElapsedMilliseconds;
@@ -200,32 +205,32 @@ namespace DungeonRising
             _currentPlayerColor = ((int)currentTime / 80) % 12;
             _currentHighlightColor = ((int)currentTime / 80) % 8;
             Position p = new Position(0, 0);
-            Entity acting = Chariot.S.Entities[Chariot.S.CurrentActor];
-            int top = Chariot.S.Camera.Y - 12, bottom = Chariot.S.Camera.Y + 12, left = Chariot.S.Camera.X - 12, right = Chariot.S.Camera.X + 12;
+            Entity acting = H.S.Entities[H.S.CurrentActor];
+            int top = H.S.Camera.Y - 12, bottom = H.S.Camera.Y + 12, left = H.S.Camera.X - 12, right = H.S.Camera.X + 12;
             if (top < 0)
             {
                 bottom -= top;
                 top = 0;
             }
-            if (bottom > Chariot.S.DungeonStart.World.GetUpperBound(0))
+            if (bottom > H.S.DungeonStart.World.GetUpperBound(0))
             {
-                top -= bottom - Chariot.S.DungeonStart.World.GetUpperBound(0);
-                bottom = Chariot.S.DungeonStart.World.GetUpperBound(0);
+                top -= bottom - H.S.DungeonStart.World.GetUpperBound(0);
+                bottom = H.S.DungeonStart.World.GetUpperBound(0);
             }
             if (left < 0)
             {
                 right -= left;
                 left = 0;
             }
-            if (right > Chariot.S.DungeonStart.World.GetUpperBound(1))
+            if (right > H.S.DungeonStart.World.GetUpperBound(1))
             {
-                left -= right - Chariot.S.DungeonStart.World.GetUpperBound(1);
-                right = Chariot.S.DungeonStart.World.GetUpperBound(1);
+                left -= right - H.S.DungeonStart.World.GetUpperBound(1);
+                right = H.S.DungeonStart.World.GetUpperBound(1);
             }
             OffsetY = top;
             OffsetX = left;
             Terminal.Layer(0);
-            if (Chariot.S.CurrentReason == WaitReason.Receiving)
+            if (H.S.CurrentReason == WaitReason.Receiving)
             {
                 for (int y = OffsetY, sy = 0; sy < 25; y++, sy++)
                 {
@@ -266,11 +271,11 @@ namespace DungeonRising
                 {
                     p.Y = y;
                     p.X = x;
-                    Entity e = Chariot.S.Entities[p];
+                    Entity e = H.S.Entities[p];
                     if (e != null)
                     {
                         Terminal.Color(e.Coloring);
-                        if (Chariot.S.CurrentReason == WaitReason.AttackAnimating && BeingDamaged.ContainsKey(e.Name))
+                        if (H.S.CurrentReason == WaitReason.AttackAnimating && BeingDamaged.ContainsKey(e.Name))
                         {
                             Terminal.Layer(3);
                             Terminal.PutExt(sx * 2 + 1, sy + 1, VisualRandom.Next(7) - 3, VisualRandom.Next(7) - 3, e.Left);
@@ -286,7 +291,7 @@ namespace DungeonRising
                         }
                         Terminal.Color(_darkGray);
                     }
-                    else if (Chariot.S.Cursor.Y == y && Chariot.S.Cursor.X == x)
+                    else if (H.S.Cursor.Y == y && H.S.Cursor.X == x)
                     {
 
                         Terminal.Color(_playerColors[(_currentPlayerColor + 3) % _playerColors.Length]);
@@ -297,8 +302,8 @@ namespace DungeonRising
                     else if (acting.Faction == 0 && acting.Seeker.Path.Contains(p))
                     {
                         Terminal.Color(_playerColors[_currentPlayerColor]);
-                        Terminal.Put(sx * 2 + 1, sy + 1, Chariot.S.DungeonStart.PairedWorld[y, x * 2]);
-                        Terminal.Put(sx * 2 + 2, sy + 1, Chariot.S.DungeonStart.PairedWorld[y, x * 2 + 1]);
+                        Terminal.Put(sx * 2 + 1, sy + 1, H.S.DungeonStart.PairedWorld[y, x * 2]);
+                        Terminal.Put(sx * 2 + 2, sy + 1, H.S.DungeonStart.PairedWorld[y, x * 2 + 1]);
                         Terminal.Color(_darkGray);
                     }
 /*                    else if(seeker.CombinedMap[y, x] < 100)
@@ -307,34 +312,35 @@ namespace DungeonRising
                     }*/
                     else
                     {
-                        Terminal.Put(sx * 2 + 1, sy + 1, Chariot.S.DungeonStart.PairedWorld[y, x * 2]);
-                        Terminal.Put(sx * 2 + 2, sy + 1, Chariot.S.DungeonStart.PairedWorld[y, x * 2 + 1]);
+                        Terminal.Put(sx * 2 + 1, sy + 1, H.S.DungeonStart.PairedWorld[y, x * 2]);
+                        Terminal.Put(sx * 2 + 2, sy + 1, H.S.DungeonStart.PairedWorld[y, x * 2 + 1]);
                     }
                 }
             }
 
-            Terminal.Print(60, 9, "Acting: " + Chariot.S.CurrentActor);
-            Gauge hp = Chariot.S.Entities[Chariot.S.CurrentActor].Stats.Health;
+            Terminal.Print(60, 9, "Acting: " + H.S.CurrentActor);
+            Gauge hp = H.S.Entities[H.S.CurrentActor].Stats.Health;
             Terminal.Print(60, 10, "Health: " + hp.Current + "/" + hp.Max);
+            Terminal.Print(60, 12, message);
 /*            Terminal.Print(60, 10, "Y: " + Cursor.Y + ", X: " + Cursor.X);
             Terminal.Print(60, 11, "Seeker Value: " + seeker.CombinedMap[Cursor.Y, Cursor.X]);
             Terminal.Print(60, 12, "Physical Value: " + seeker.PhysicalMap[Cursor.Y, Cursor.X]);*/
 
             Terminal.Refresh();
             Terminal.Clear();
-            if (Chariot.S.CurrentReason == WaitReason.WalkAnimating)
+            if (H.S.CurrentReason == WaitReason.WalkAnimating)
             {
                 if (delta < 85)
                 {
                     _now = previousTime; // This run didn't count toward advancing animations.
                     return;
                 }
-                Chariot.S.StepsLeft = Chariot.S.Entities.Step(Chariot.S.CurrentActor);
-                ++Chariot.S.StepsTaken;
-                if (Chariot.S.StepsLeft <= 0 || Chariot.S.StepsTaken > acting.Stats.MoveSpeed)
+                H.S.StepsLeft = H.S.Entities.Step(H.S.CurrentActor);
+                ++H.S.StepsTaken;
+                if (H.S.StepsLeft <= 0 || H.S.StepsTaken > acting.Stats.MoveSpeed)
                 {
                     FinishMove();
-                    if(Chariot.S.CurrentReason == WaitReason.AttackAnimating)
+                    if(H.S.CurrentReason == WaitReason.AttackAnimating)
                     {
                         return;
                     }
@@ -344,7 +350,7 @@ namespace DungeonRising
                     }
                 }
             }
-            else if (Chariot.S.CurrentReason == WaitReason.AttackAnimating)
+            else if (H.S.CurrentReason == WaitReason.AttackAnimating)
             {
                 if (delta < 120)
                 {
@@ -353,53 +359,52 @@ namespace DungeonRising
                 }
                 NextTurn();
             }
-            else if(Chariot.S.CurrentReason == WaitReason.CameraMoving)
+            else if(H.S.CurrentReason == WaitReason.CameraMoving)
             {
                 if (delta < 55)
                 {
                     _now = previousTime; // This run didn't count toward advancing animations.
                     return;
                 }
-                if (Chariot.S.Camera.X < acting.Pos.X)
+                if (H.S.Camera.X < acting.Pos.X)
                 {
-                    Chariot.S.Camera.Move(0, 1);
-                    if (Chariot.S.Camera.X + 12 > Chariot.S.DungeonStart.World.GetUpperBound(1))
-                        Chariot.S.Camera.X = acting.Pos.X;
+                    H.S.Camera.Move(0, 1);
+                    if (H.S.Camera.X + 12 > H.S.DungeonStart.World.GetUpperBound(1))
+                        H.S.Camera.X = acting.Pos.X;
                 }
-                else if (Chariot.S.Camera.X > acting.Pos.X)
+                else if (H.S.Camera.X > acting.Pos.X)
                 {
-                    Chariot.S.Camera.Move(0, -1);
-                    if (Chariot.S.Camera.X < 12)
-                        Chariot.S.Camera.X = acting.Pos.X;
+                    H.S.Camera.Move(0, -1);
+                    if (H.S.Camera.X < 12)
+                        H.S.Camera.X = acting.Pos.X;
                 }
-                if (Chariot.S.Camera.Y < acting.Pos.Y)
+                if (H.S.Camera.Y < acting.Pos.Y)
                 {
-                    Chariot.S.Camera.Move(1, 0);
-                    if (Chariot.S.Camera.Y + 12 > Chariot.S.DungeonStart.World.GetUpperBound(0))
-                        Chariot.S.Camera.Y = acting.Pos.Y;
+                    H.S.Camera.Move(1, 0);
+                    if (H.S.Camera.Y + 12 > H.S.DungeonStart.World.GetUpperBound(0))
+                        H.S.Camera.Y = acting.Pos.Y;
                 }
-                else if (Chariot.S.Camera.Y > acting.Pos.Y)
+                else if (H.S.Camera.Y > acting.Pos.Y)
                 {
-                    Chariot.S.Camera.Move(-1, 0);
-                    if (Chariot.S.Camera.Y < 12)
-                        Chariot.S.Camera.Y = acting.Pos.Y;
+                    H.S.Camera.Move(-1, 0);
+                    if (H.S.Camera.Y < 12)
+                        H.S.Camera.Y = acting.Pos.Y;
                 }
-                if (Chariot.S.Camera.X == acting.Pos.X && Chariot.S.Camera.Y == acting.Pos.Y)
+                if (H.S.Camera.X == acting.Pos.X && H.S.Camera.Y == acting.Pos.Y)
                 {
                     if (acting.Faction == 0)
                     {
 
                         Seeker.SetGoal(acting.Pos.Y, acting.Pos.X);
-                        Seeker.SetEnemies(acting.Seeker.Enemies);
-                        Seeker.Scan();
-                        Chariot.S.CurrentReason = WaitReason.Receiving;
-                        Chariot.Remember();
+                        Seeker.Scan(acting);
+                        H.S.CurrentReason = WaitReason.Receiving;
+                        H.Remember();
 
                     }
                     else
                     {
-                        Chariot.S.CurrentReason = WaitReason.WalkAnimating;
-                        acting.Seeker.GetPath(acting.Pos, Chariot.S.Entities["Player"].Pos, acting.Stats.MoveSpeed);
+                        H.S.CurrentReason = WaitReason.WalkAnimating;
+                        acting.Seeker.GetPath(acting, acting.Pos, H.S.Entities["Player"].Pos, acting.Stats.MoveSpeed);
                     }
                 }
             }
@@ -408,34 +413,38 @@ namespace DungeonRising
         private void FinishMove()
         {
             
-            Chariot.S.StepsTaken = 0;
-            Entity e = Chariot.S.Entities[Chariot.S.CurrentActor];
+            H.S.StepsTaken = 0;
+            Entity e = H.S.Entities[H.S.CurrentActor];
             
-            List<Position> adj = e.Seeker.AdjacentToEnemy(e.Pos);
+            List<Position> adj = e.AdjacentToEnemy(e.Pos);
             if(adj.Count > 0)
             {
                 Position rpos = adj[XSSR.Next(adj.Count)];
-                BeingDamaged.Add(Chariot.S.Entities[rpos].Name, true);
-                Chariot.S.Entities.Attack(e.Pos, rpos);
-                Chariot.S.CurrentReason = WaitReason.AttackAnimating;
+                BeingDamaged.Add(H.S.Entities[rpos].Name, true);
+                message = H.S.Entities.Attack(e.Pos, rpos);
+                H.S.CurrentReason = WaitReason.AttackAnimating;
                 
+            }
+            else
+            {
+                message = "";
             }
         }
         private void NextTurn()
         {
             BeingDamaged.Clear();
-            Entity e = Chariot.S.Entities[Chariot.S.CurrentActor];
+            Entity e = H.S.Entities[H.S.CurrentActor];
 
             e.Seeker.Reset();
-            Entity next = Chariot.S.Entities[Chariot.S.Initiative.NextTurn().Actor];
+            Entity next = H.S.Entities[H.S.Initiative.NextTurn().Actor];
 
-            if (--Chariot.S.TurnsLeft <= 0)
-                Chariot.ResetInitiative();
-            Chariot.S.Initiative.AddTurn(e.Name, e.Delay);
+            if (--H.S.TurnsLeft <= 0)
+                H.ResetInitiative();
+            H.S.Initiative.AddTurn(e.Name, e.Delay);
 
-            Chariot.S.CurrentReason = WaitReason.CameraMoving;
+            H.S.CurrentReason = WaitReason.CameraMoving;
 
-            Chariot.S.CurrentActor = next.Name;
+            H.S.CurrentActor = next.Name;
 
 
         }
@@ -446,11 +455,11 @@ namespace DungeonRising
                 Input = Terminal.Read();
                 if(Input == Terminal.TK_S)
                 {
-                    Chariot.S.XSSRState = XSSR.GetState();
+                    H.S.XSSRState = XSSR.GetState();
                     using (FileStream fs = new FileStream("Savefile.sav", FileMode.Create, FileAccess.Write))
                     {
                         BinaryFormatter bf = new BinaryFormatter();
-                        bf.Serialize(fs, Chariot.S);
+                        bf.Serialize(fs, H.S);
                     }
 //                    File.WriteAllText("Savefile.json", JsonConvert.SerializeObject(S));
                 }
@@ -462,7 +471,7 @@ namespace DungeonRising
                 {
                     continue;
                 }
-                switch (Chariot.S.CurrentReason)
+                switch (H.S.CurrentReason)
                 {
                     case WaitReason.WalkAnimating:
                         {
@@ -470,43 +479,43 @@ namespace DungeonRising
                         break;
                     case WaitReason.Receiving:
                         {
-                            Entity acting = Chariot.S.Entities[Chariot.S.CurrentActor];
+                            Entity acting = H.S.Entities[H.S.CurrentActor];
                             switch (Input)
                             {
                                 case Terminal.TK_MOUSE_LEFT:
                                     {
                                         Position temp = new Position((Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY, (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX);
-                                        Chariot.S.Cursor = temp;
-                                        Chariot.S.Cursor.MakeValid(Chariot.S.DungeonStart.Height, Chariot.S.DungeonStart.Width);
-                                        if (acting.Seeker.Path.Contains(Chariot.S.Cursor))
+                                        H.S.Cursor = temp;
+                                        H.S.Cursor.MakeValid(H.S.DungeonStart.Height, H.S.DungeonStart.Width);
+                                        if (acting.Seeker.Path.Contains(H.S.Cursor))
                                         {
                                             Seeker.Goals.Clear();
-                                            Chariot.S.CurrentReason = WaitReason.WalkAnimating;
+                                            H.S.CurrentReason = WaitReason.WalkAnimating;
                                         }
-                                        else if (Chariot.S.Cursor == acting.Pos)
+                                        else if (H.S.Cursor == acting.Pos)
                                         {
                                             acting.Seeker.Path.Add(acting.Pos); 
                                             Seeker.Goals.Clear();
-                                            Chariot.S.CurrentReason = WaitReason.WalkAnimating;
+                                            H.S.CurrentReason = WaitReason.WalkAnimating;
                                         }
                                     }
                                     break;
                                 case Terminal.TK_MOUSE_MOVE:
                                     {
                                         Position temp = new Position((Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY, (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX);
-                                        Chariot.S.Cursor = temp;
-                                        if (Chariot.S.Cursor.Validate(Chariot.S.DungeonStart.Height, Chariot.S.DungeonStart.Width))
-                                            acting.Seeker.GetPath(acting.Pos, Chariot.S.Cursor, acting.Stats.MoveSpeed);
-                                        Chariot.S.Cursor.MakeValid(Chariot.S.DungeonStart.Height, Chariot.S.DungeonStart.Width);
+                                        H.S.Cursor = temp;
+                                        if (H.S.Cursor.Validate(H.S.DungeonStart.Height, H.S.DungeonStart.Width))
+                                            acting.Seeker.GetPath(acting, acting.Pos, H.S.Cursor, acting.Stats.MoveSpeed);
+                                        H.S.Cursor.MakeValid(H.S.DungeonStart.Height, H.S.DungeonStart.Width);
                                     }
                                     break;
                                 case Terminal.TK_LEFT:
                                 case Terminal.TK_KP_4:
                                 case Terminal.TK_H:
                                     {
-                                        if (Chariot.S.DungeonStart.LogicWorld[Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y, Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X - 1] == Dungeon.Floor)
+                                        if (H.S.DungeonStart.LogicWorld[H.S.Entities[H.S.CurrentActor].Pos.Y, H.S.Entities[H.S.CurrentActor].Pos.X - 1] == Dungeon.Floor)
                                         {
-                                            Chariot.S.Entities.Move(Chariot.S.CurrentActor, 0, -1);
+                                            H.S.Entities.Move(H.S.CurrentActor, 0, -1);
                                             FinishMove();
                                         }
                                     }
@@ -515,9 +524,9 @@ namespace DungeonRising
                                 case Terminal.TK_KP_6:
                                 case Terminal.TK_L:
                                     {
-                                        if (Chariot.S.DungeonStart.LogicWorld[Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y, Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X + 1] == Dungeon.Floor)
+                                        if (H.S.DungeonStart.LogicWorld[H.S.Entities[H.S.CurrentActor].Pos.Y, H.S.Entities[H.S.CurrentActor].Pos.X + 1] == Dungeon.Floor)
                                         {
-                                            Chariot.S.Entities.Move(Chariot.S.CurrentActor, 0, 1);
+                                            H.S.Entities.Move(H.S.CurrentActor, 0, 1);
                                             FinishMove();
                                         }
                                     }
@@ -526,9 +535,9 @@ namespace DungeonRising
                                 case Terminal.TK_KP_8:
                                 case Terminal.TK_K:
                                     {
-                                        if (Chariot.S.DungeonStart.LogicWorld[Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y - 1, Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X] == Dungeon.Floor)
+                                        if (H.S.DungeonStart.LogicWorld[H.S.Entities[H.S.CurrentActor].Pos.Y - 1, H.S.Entities[H.S.CurrentActor].Pos.X] == Dungeon.Floor)
                                         {
-                                            Chariot.S.Entities.Move(Chariot.S.CurrentActor, -1, 0);
+                                            H.S.Entities.Move(H.S.CurrentActor, -1, 0);
                                             FinishMove();
                                         }
                                     }
@@ -537,9 +546,9 @@ namespace DungeonRising
                                 case Terminal.TK_KP_2:
                                 case Terminal.TK_J:
                                     {
-                                        if (Chariot.S.DungeonStart.LogicWorld[Chariot.S.Entities[Chariot.S.CurrentActor].Pos.Y + 1, Chariot.S.Entities[Chariot.S.CurrentActor].Pos.X] == Dungeon.Floor)
+                                        if (H.S.DungeonStart.LogicWorld[H.S.Entities[H.S.CurrentActor].Pos.Y + 1, H.S.Entities[H.S.CurrentActor].Pos.X] == Dungeon.Floor)
                                         {
-                                            Chariot.S.Entities.Move(Chariot.S.CurrentActor, 1, 0);
+                                            H.S.Entities.Move(H.S.CurrentActor, 1, 0);
                                             FinishMove();
                                         }
                                     }

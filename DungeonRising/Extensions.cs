@@ -348,11 +348,18 @@ namespace DungeonRising
             }
 
         }
-        public static void UpdateAll<TK, TV>(this Dictionary<TK, TV> dict, IEnumerable<KeyValuePair<TK, TV>> items)
+        public static void UpdateAll<TK, TV>(this IDictionary<TK, TV> dict, IEnumerable<KeyValuePair<TK, TV>> items)
         {
             foreach (var kv in items)
             {
                 dict[kv.Key] = kv.Value;
+            }
+        }
+        public static void UpdateWithPositions(this IDictionary<int, int> dict, IEnumerable<KeyValuePair<Position, int>> items, int width)
+        {
+            foreach (var kv in items)
+            {
+                dict[kv.Key.Y * width + kv.Key.X] = kv.Value;
             }
         }
         public static Dictionary<TK, TV> Replicate<TK, TV>(this Dictionary<TK, TV> dict)
