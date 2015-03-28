@@ -211,7 +211,7 @@ namespace DungeonRising
             SetGoal(goal.Y, goal.X);
             Scan(self);
             Position currentPos = start;
-//            Path.Add(currentPos);
+            //            Path.Add(currentPos);
             while (CombinedMap[currentPos.Y, currentPos.X] > 0)
             {
                 if (_frustration > 500)
@@ -234,7 +234,7 @@ namespace DungeonRising
                         choice = d;
                     }
                 }
-                if(best >= 9999)
+                if (best >= 9999)
                 {
                     _frustration = 0;
                     Path = new List<Position>();
@@ -246,11 +246,77 @@ namespace DungeonRising
                 _frustration++;
                 if (Path.Count >= length)
                 {
-                    if(self.Allies.ContainsKey(currentPos))
+                    if (self.Allies.ContainsKey(currentPos))
                     {
                         _closed.UpdateWithPositions(self.Allies, Width);
                         Scan(self);
                         return GetPath(self, start, goal, length);
+                    }
+                    foreach (var kv in Goals)
+                    {
+                        ResetCell(kv.Key / Width, kv.Key % Width);
+                    }
+                    Goals.Clear();
+                    return Path;
+                }
+            }
+            _frustration = 0;
+            foreach (var kv in Goals)
+            {
+                ResetCell(kv.Key / Width, kv.Key % Width);
+            }
+            Goals.Clear();
+            return Path;
+        }
+        public List<Position> GetPath(Entity self, Position start, IEnumerable<Position> goals, int length)
+        {
+            Path = new List<Position>();
+            foreach (var goal in goals)
+            {
+                SetGoal(goal.Y, goal.X);
+            }
+            Scan(self);
+            Position currentPos = start;
+            //            Path.Add(currentPos);
+            while (CombinedMap[currentPos.Y, currentPos.X] > 0)
+            {
+                if (_frustration > 500)
+                {
+                    Path = new List<Position>();
+                    _frustration = 0;
+                    foreach (var kv in Goals)
+                    {
+                        ResetCell(kv.Key / Width, kv.Key % Width);
+                    }
+                    Goals.Clear();
+                    return Path;
+                } int best = 9999, choice = 0, whichOrder = Rand.Next(24);
+                int[] dirsY = DirShuffledY[whichOrder], dirsX = DirShuffledX[whichOrder];
+                for (int d = 0; d < 4; d++)
+                {
+                    if (CombinedMap[currentPos.Y + dirsY[d], currentPos.X + dirsX[d]] < best)
+                    {
+                        best = CombinedMap[currentPos.Y + dirsY[d], currentPos.X + dirsX[d]];
+                        choice = d;
+                    }
+                }
+                if (best >= 9999)
+                {
+                    _frustration = 0;
+                    Path = new List<Position>();
+                    return Path;
+                }
+                currentPos.Y += dirsY[choice];
+                currentPos.X += dirsX[choice];
+                Path.Add(currentPos);
+                _frustration++;
+                if (Path.Count >= length)
+                {
+                    if (self.Allies.ContainsKey(currentPos))
+                    {
+                        _closed.UpdateWithPositions(self.Allies, Width);
+                        Scan(self);
+                        return GetPath(self, start, goals, length);
                     }
                     foreach (var kv in Goals)
                     {

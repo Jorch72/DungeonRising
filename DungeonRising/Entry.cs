@@ -66,6 +66,7 @@ namespace DungeonRising
         private Stopwatch _timer;
         private long _now;
         public static string IconGlyphs = "ሀሁሂሃሄህሆሇለሉሊላሌልሎሏሐሑሒሓሔሕሖሗመሙሚማሜ";
+        public static string WeaponGlyphs = "ሂሕሗሙህሌልሐሆሊሁሃሇለሏሑሓመማ";
         public Entry()
         {
             State s = new State();
@@ -76,19 +77,36 @@ namespace DungeonRising
             var spawnPoint = s.DungeonStart.LogicWorld.RandomMatch(Dungeon.Floor);
 
 
-            Entity player = new Entity("Player", "@ሂ", Color.Indigo, spawnPoint.Y, spawnPoint.X, 5, 5, 0).UpdateStats(health: new Gauge(20), damage: 3); // \u1202
-            s.CurrentActor = "Player";
-            s.Cursor = new Position(spawnPoint.Y, spawnPoint.X);
-            s.Camera = new Position(spawnPoint.Y, spawnPoint.X);
-            player.Seeker = new Dijkstra(s.DungeonStart.LogicWorld);
-
             Seeker = new Dijkstra(s.DungeonStart.LogicWorld);
             VisualRandom = new XSRandom();
             BeingDamaged = new Dictionary<string, bool>();
 
 //            Player.Seeker.SetGoal(Player.Pos.Y, Player.Pos.X);
 //            Player.Seeker.Scan();
-            s.Entities.Add("Player", player);
+            
+            for (int i = 0; i < 6; i++)
+            {
+                do
+                {
+                    if (s.Entities.Contains(spawnPoint))
+                    {
+                        spawnPoint = s.DungeonStart.LogicWorld.RandomMatch(Dungeon.Floor);
+                        continue;    
+                    }
+                    Entity player =
+                        new Entity("Hero " + ((char) (65 + i)), "@" + WeaponGlyphs[i], _playerColors[i], spawnPoint.Y,
+                            spawnPoint.X, 5, 3 + XSSR.Next(4), 0).UpdateStats(health: new Gauge(10), damage: 3);
+                        // \u1202
+                    s.CurrentActor = player.Name;
+                    s.Cursor = new Position(spawnPoint.Y, spawnPoint.X);
+                    s.Camera = new Position(spawnPoint.Y, spawnPoint.X);
+                    player.Seeker = new Dijkstra(s.DungeonStart.LogicWorld);
+                    s.Entities.Add(player);
+                    spawnPoint = s.DungeonStart.LogicWorld.RandomMatch(Dungeon.Floor);
+                    break;
+                } while (true);
+            }
+            
             for (int i = 0; i < 25; i++)
             {
                 spawnPoint = s.DungeonStart.LogicWorld.RandomMatch(Dungeon.Floor);
@@ -404,7 +422,7 @@ namespace DungeonRising
                     else
                     {
                         H.S.CurrentReason = WaitReason.WalkAnimating;
-                        acting.Seeker.GetPath(acting, acting.Pos, H.S.Entities["Player"].Pos, acting.Stats.MoveSpeed);
+                        acting.Seeker.GetPath(acting, acting.Pos, H.S.Entities.NameToEntity.Where(kv => kv.Value.Faction == 0).Select(kv => kv.Value.Pos), acting.Stats.MoveSpeed);
                     }
                 }
             }
