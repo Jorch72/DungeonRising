@@ -97,9 +97,6 @@ namespace DungeonRising
                         new Entity("Hero " + ((char) (65 + i)), "@" + WeaponGlyphs[i], _playerColors[i], spawnPoint.Y,
                             spawnPoint.X, 5, 3 + XSSR.Next(4), 0).UpdateStats(health: new Gauge(10), damage: 3);
                         // \u1202
-                    s.CurrentActor = player.Name;
-                    s.Cursor = new Position(spawnPoint.Y, spawnPoint.X);
-                    s.Camera = new Position(spawnPoint.Y, spawnPoint.X);
                     player.Seeker = new Dijkstra(s.DungeonStart.LogicWorld);
                     s.Entities.Add(player);
                     spawnPoint = s.DungeonStart.LogicWorld.RandomMatch(Dungeon.Floor);
@@ -137,8 +134,12 @@ namespace DungeonRising
 
             H.ResetInitiative();
             Entity first = H.S.Entities[H.S.Initiative.PeekTurn().Actor];
+            H.S.CurrentActor = first.Name;
+            H.S.Cursor = first.Pos;
+            H.S.Camera = first.Pos;
             if (first.Faction == 0)
             {
+
                 Seeker.SetGoal(first.Pos.Y, first.Pos.X);
                 Seeker.Scan(first);
 
