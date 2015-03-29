@@ -134,16 +134,15 @@ namespace DungeonRising
         {
             return Allies.ContainsKey(pos) ? UpdateWith(allies: Allies.Remove(pos)) : this;
         }
-
         public Entity UpdateAlly(Position start, Position end)
         {
-            ImmutableDictionary<Position, int> tmp = Allies;
-            if (Allies.ContainsKey(start))
+            ImmutableDictionary<Position, int>.Builder tmpa = Allies.ToBuilder();
+            if (tmpa.ContainsKey(start))
             {
-                tmp = Allies.Remove(start);
+                tmpa.Remove(start);
             }
-            tmp = Allies.SetItem(end, Dungeon.Wall);
-            return UpdateWith(allies: tmp);
+            tmpa[end] = Dungeon.Wall;
+            return UpdateWith(obstacles: tmpa.ToImmutable());
         }
         public Entity AddAlly(Position pos)
         {

@@ -110,6 +110,10 @@ namespace DungeonRising
             CombinedMap = PhysicalMap.Replicate();
             Goals.Clear();
             Path.Clear();
+            _closed.Clear();
+            _fresh.Clear();
+            _open.Clear();
+            _frustration = 0;
         }
         public void SetGoal(int y, int x)
         {
@@ -131,6 +135,16 @@ namespace DungeonRising
         {
             CombinedMap[y, x] = PhysicalMap[y, x];
         }
+
+        public void ClearGoals()
+        {
+            foreach (var kv in Goals)
+            {
+                ResetCell(kv.Key / Width, kv.Key % Width);
+            }
+            Goals.Clear();
+        }
+
         protected void SetFresh(int y, int x, int counter)
         {
             CombinedMap[y, x] = counter;
@@ -218,11 +232,7 @@ namespace DungeonRising
                 {
                     Path = new List<Position>();
                     _frustration = 0;
-                    foreach (var kv in Goals)
-                    {
-                        ResetCell(kv.Key / Width, kv.Key % Width);
-                    }
-                    Goals.Clear();
+                    ClearGoals();
                     return Path;
                 } int best = 9999, choice = 0, whichOrder = Rand.Next(24);
                 int[] dirsY = DirShuffledY[whichOrder], dirsX = DirShuffledX[whichOrder];
@@ -252,20 +262,12 @@ namespace DungeonRising
                         Scan(self);
                         return GetPath(self, start, goal, length);
                     }
-                    foreach (var kv in Goals)
-                    {
-                        ResetCell(kv.Key / Width, kv.Key % Width);
-                    }
-                    Goals.Clear();
+                    ClearGoals();
                     return Path;
                 }
             }
             _frustration = 0;
-            foreach (var kv in Goals)
-            {
-                ResetCell(kv.Key / Width, kv.Key % Width);
-            }
-            Goals.Clear();
+            ClearGoals();
             return Path;
         }
         public List<Position> GetPath(Entity self, Position start, IEnumerable<Position> goals, int length)
@@ -284,11 +286,7 @@ namespace DungeonRising
                 {
                     Path = new List<Position>();
                     _frustration = 0;
-                    foreach (var kv in Goals)
-                    {
-                        ResetCell(kv.Key / Width, kv.Key % Width);
-                    }
-                    Goals.Clear();
+                    ClearGoals();
                     return Path;
                 } int best = 9999, choice = 0, whichOrder = Rand.Next(24);
                 int[] dirsY = DirShuffledY[whichOrder], dirsX = DirShuffledX[whichOrder];
@@ -318,20 +316,12 @@ namespace DungeonRising
                         Scan(self);
                         return GetPath(self, start, goals, length);
                     }
-                    foreach (var kv in Goals)
-                    {
-                        ResetCell(kv.Key / Width, kv.Key % Width);
-                    }
-                    Goals.Clear();
+                    ClearGoals();
                     return Path;
                 }
             }
             _frustration = 0;
-            foreach (var kv in Goals)
-            {
-                ResetCell(kv.Key / Width, kv.Key % Width);
-            }
-            Goals.Clear();
+            ClearGoals();
             return Path;
         }
         /*

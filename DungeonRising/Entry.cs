@@ -197,7 +197,7 @@ namespace DungeonRising
             }
             Terminal.Open();
             Terminal.Set("log: level=trace");
-            Terminal.Set("window: title='Dungeon Rising', size=90x30; font: Rogue-Zodiac-12x24.png, size=12x24, codepage=custom.txt; output: vsync=false");
+            Terminal.Set("window: title='Dungeon Rising', size=90x30; font: Rogue-Zodiac-12x24.png, size=12x24, codepage=custom.txt; output: vsync=true");
             Self._animationThread = new Thread(() => {
                 Self._timer = Stopwatch.StartNew();
                 Self._now = Self._timer.ElapsedMilliseconds;
@@ -414,8 +414,6 @@ namespace DungeonRising
                     if (acting.Faction == 0)
                     {
 
-                        Seeker.SetGoal(acting.Pos.Y, acting.Pos.X);
-                        Seeker.Scan(acting);
                         H.S.CurrentReason = WaitReason.Receiving;
                         H.Remember();
 
@@ -451,27 +449,37 @@ namespace DungeonRising
         }
         private void NextTurn()
         {
-            BeingDamaged.Clear();
-            Entity e = H.S.Entities[H.S.CurrentActor];
+            lock (Self)
+            {
 
-            e.Seeker.Reset();
-            Entity next = H.S.Entities[H.S.Initiative.NextTurn().Actor];
+                BeingDamaged.Clear();
+                Entity e = H.S.Entities[H.S.CurrentActor];
 
-            if (--H.S.TurnsLeft <= 0)
-                H.ResetInitiative();
-            H.S.Initiative.AddTurn(e.Name, e.Delay);
+                e.Seeker.Reset();
+                Entity next = H.S.Entities[H.S.Initiative.NextTurn().Actor];
 
-            H.S.CurrentReason = WaitReason.CameraMoving;
+                Seeker.Reset();
+                Seeker.SetGoal(next.Pos.Y, next.Pos.X);
+                Seeker.Scan(next);
 
-            H.S.CurrentActor = next.Name;
+                if (--H.S.TurnsLeft <= 0)
+                    H.ResetInitiative();
+                H.S.Initiative.AddTurn(e.Name, e.Delay);
 
+                H.S.CurrentReason = WaitReason.CameraMoving;
+
+                H.S.CurrentActor = next.Name;
+            }
 
         }
         public void RunEntry()
         {
             do
             {
-                Input = Terminal.Read();
+                if(Terminal.HasInput())
+                    Input = Terminal.Read();
+                else
+                    continue;
                 if(Input == Terminal.TK_S)
                 {
                     H.S.XSSRState = XSSR.GetState();
@@ -505,16 +513,18 @@ namespace DungeonRising
                                     {
                                         Position temp = new Position((Terminal.State(Terminal.TK_MOUSE_Y) - 1) + OffsetY, (Terminal.State(Terminal.TK_MOUSE_X) - 1) / 2 + OffsetX);
                                         H.S.Cursor = temp;
+                                        //if (H.S.Cursor.Validate(H.S.DungeonStart.Height, H.S.DungeonStart.Width))
+                                        //    acting.Seeker.GetPath(acting, acting.Pos, H.S.Cursor, acting.Stats.MoveSpeed);
                                         H.S.Cursor.MakeValid(H.S.DungeonStart.Height, H.S.DungeonStart.Width);
                                         if (acting.Seeker.Path.Contains(H.S.Cursor))
                                         {
-                                            Seeker.Goals.Clear();
+                                            Seeker.ClearGoals();
                                             H.S.CurrentReason = WaitReason.WalkAnimating;
                                         }
                                         else if (H.S.Cursor == acting.Pos)
                                         {
-                                            acting.Seeker.Path.Add(acting.Pos); 
-                                            Seeker.Goals.Clear();
+                                            acting.Seeker.Path.Add(acting.Pos);
+                                            Seeker.ClearGoals();
                                             H.S.CurrentReason = WaitReason.WalkAnimating;
                                         }
                                     }

@@ -73,6 +73,20 @@ namespace DungeonRising
                 }
             } while (true);
         }
+        public static void AddTurn(SortedList<double, string> scheduled, string actor, double delay)
+        {
+            double altDelay = delay;
+            do
+            {
+                if (scheduled.ContainsKey(altDelay))
+                    altDelay += 0.0002;
+                else
+                {
+                    scheduled.Add(altDelay, actor);
+                    break;
+                }
+            } while (true);
+        }
 
         public void AddTurn(Turn turn)
         {
@@ -93,7 +107,7 @@ namespace DungeonRising
             SortedList<double, string> altScheduled = new SortedList<double, string>(Scheduled.Count);
             foreach (var t in Scheduled)
             {
-                altScheduled.Add(t.Key - nxt, t.Value);
+                AddTurn(altScheduled, t.Value, t.Key - nxt);
             }
             Scheduled = altScheduled;
             return tr;
