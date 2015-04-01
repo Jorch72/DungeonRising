@@ -129,11 +129,6 @@
     <EmbeddedResource Include="resources\simple_caves_2_wide.js" />
     <EmbeddedResource Include="resources\square_rooms_with_random_rects.js" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="C5.dll" />
-    <Content Include="C5.pdb" />
-    <Content Include="C5.XML" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
